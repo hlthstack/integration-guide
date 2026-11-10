@@ -9,6 +9,7 @@ body defensively. The shapes you will see:
 | Messages | `{"errors": {"messages": ["This booking cannot be rescheduled"]}}` | Business-rule failures (400/422) and any unexpected error (422) |
 | Plain message | `{"message": "Required details are missing"}` | Auth, entity headers, slots |
 | Bare list | `{"errors": ["Invalid status"]}` | Staging simulation endpoints |
+| Base errors | `{"errors": {"base": ["..."]}}` | ePharmacy order confirmation (409/422) |
 | Success flag | `{"success": false, "message": "Order not found"}` | ePharmacy |
 | Booking failure | `{"msg": "...", "recall": false}` | Booking could not be placed |
 | Single error | `{"error": "Invalid company slug for authenticated partner."}` | Wallet endpoints |

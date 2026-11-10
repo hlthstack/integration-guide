@@ -10,8 +10,8 @@ and receive status updates by webhook.
 | Integration | What it is | Where |
 |---|---|---|
 | REST API | The HTTP API: OpenAPI spec and guides | This repo: [`openapi/openapi.yaml`](openapi/openapi.yaml), [`docs/`](docs/) |
-| JavaScript SDK | Client library for Node.js and browsers | https://github.com/hlthstack/js |
-| Python SDK | Client library for Python | https://github.com/hlthstack/python |
+| JavaScript | Server-side SDK for Node.js, plus a guide to calling the API with plain `fetch` | https://github.com/hlthstack/js |
+| Python | SDK (sync and async), plus a guide to calling the API with plain `requests` | https://github.com/hlthstack/python |
 | Web / PWA embed | Embed the hlthstack member experience in your app or site | https://github.com/hlthstack/web |
 | AI assistant skills | Instructions that teach Claude and ChatGPT to use this API | This repo: [`skills/`](skills/) |
 
