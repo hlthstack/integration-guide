@@ -60,12 +60,15 @@ app.use(express.json());
 function verify(req) {
   const claims = jwt.verify(req.get("Signature"), SECRET, { algorithms: ["HS256"] });
   const body = req.body;
-  if (Math.abs(Date.now() / 1000 - claims.timestamp) > 300) throw new Error("stale");
+  if (typeof claims.timestamp !== "number" || Math.abs(Date.now() / 1000 - claims.timestamp) > 300) {
+    throw new Error("stale");
+  }
   if (claims.order_id !== undefined) {
     if (claims.order_id !== body.order_id || claims.webhook_type !== body.type) throw new Error("mismatch");
   } else if (claims.request_id !== undefined) {
     if (claims.request_id !== body.request_id) throw new Error("mismatch");
-  } else if (claims.appointment_id !== body.appointment_id || claims.booking_id !== body.booking_id) {
+  } else if (!claims.appointment_id || claims.appointment_id !== body.appointment_id ||
+             claims.booking_id !== body.booking_id) {
     throw new Error("mismatch");
   }
   return claims;
