@@ -79,16 +79,17 @@ change, otherwise `422 cart updates are required`. The update is atomic.
 
 | Change | Body |
 |---|---|
-| Products | `products: [{id, quantity}]`. `quantity: 0` removes a line; ids you don't send are untouched; duplicate ids are rejected |
-| New address | `address: {line1, line2, city, state, pincode, country, latitude, longitude}`. `line1`, `city`, `state`, `pincode` are required; country defaults to India |
+| Products | `products: [{id, quantity}]` (non-empty). `quantity` is a whole number: `0` removes a line, a positive value must not exceed the medicine's `limit_per_order`; ids you don't send are untouched; duplicate ids are rejected |
+| New address | `address: {line1, line2, city, state, pincode, country, latitude, longitude}`. `line1`, `city`, `state`, `pincode` (6 digits; `zip_code` is accepted as an alias) are required; country defaults to India. The lines, city, state and country must not contain any other 6-digit pincode |
 | Saved address | `address_id` (must belong to the member). Don't send both `address` and `address_id` |
-| Prescription by URL | `prescription_urls: [...]` (up to 5; public HTTPS on port 443; PDF/PNG/JPEG under 7 MB) |
+| Prescription by URL | `prescription_urls: [...]` (up to 5; public HTTPS on port 443, no user info in the URL; PDF/PNG/JPEG under 7 MB) |
 | Prescription upload | multipart `prescription_files[]` (each under 7 MB) |
-| Remove prescriptions | `remove_prescription_ids: [...]` |
+| Remove prescriptions | `remove_prescription_ids: [...]` (non-empty; each must be attached to the cart) |
 | Store pickup | `fulfillment_type: "store_pickup"` + `selected_chemist_id` (a store `id` from fulfillment options) |
 
 `customer_details.name`, `dob`, `mobile_number` and `gender` are optional; they create the
-member if `api_customer_id` is new and update the member otherwise.
+member if `api_customer_id` is new and update the member otherwise. When sent non-empty,
+`mobile_number` must be 10 digits and `gender` `male`, `female` or `non-binary` (any case).
 
 Read the cart with `GET /api/epharmacy/cart?customer_details[api_customer_id]=...&plan_id=...`.
 Carts don't expire. Because a cart can be old, prices, stock and serviceability are
@@ -170,7 +171,7 @@ The response `status` is `confirmed`, `payment_pending` (with `payment_link`) or
 | First confirmation | `200 {"status": "confirmed", ...}` |
 | Replay with the same amount and reference | `200 {"status": "already_confirmed", ...}`, safe to retry |
 | Concurrent confirmation in progress | `409 {"status": "transaction_locked", ...}`; back off and retry |
-| Bad amount or reference, wrong state, amount mismatch, already confirmed with another reference | `422 {"status": "invalid_payment", "errors": ...}` |
+| Bad amount (must be a decimal greater than 0) or blank reference, wrong state, amount mismatch, already confirmed with another reference | `422 {"status": "invalid_payment", "errors": ...}` |
 
 `errors` on 409/422 is either an array of strings or an object with a `base` key; handle both.
 

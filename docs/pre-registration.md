@@ -92,10 +92,10 @@ processed before dependants, so a dependant can refer to an employee in the same
 |---|---|---|
 | `company_id` | yes | The company (or entity) the member belongs to, shared at onboarding. Must be one your credentials can act on, otherwise the row fails with `provided company_id is not valid` |
 | `employee_code` | yes | Value required when `email` is empty. Unique within the company |
-| `email` | no | Value required when `employee_code` is empty. Unique |
-| `first_name` | yes | Value required |
-| `last_name` | yes | |
-| `date_of_birth` | yes | `DD-MM-YYYY` or `DD/MM/YYYY`, in the past |
+| `email` | no | Value required when `employee_code` is empty. Must be a valid email. Unique |
+| `first_name` | yes | Value required. Letters and spaces only |
+| `last_name` | yes | Letters and spaces only |
+| `date_of_birth` | yes | `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099), not in the future |
 | `gender` | yes | `Male`, `Female` or `Non-binary` (any case) |
 | `mobile_number` | yes | 10 digits, no country code |
 | `vip` | yes | `Yes` or `No` (any case) |
@@ -103,7 +103,7 @@ processed before dependants, so a dependant can refer to an employee in the same
 | `employee_office_location` | yes | |
 | `department` | yes | |
 | `grade` | yes | |
-| `date_of_joining` | yes | `DD-MM-YYYY` or `DD/MM/YYYY` |
+| `date_of_joining` | yes | `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099) |
 | `api_customer_id` | no | Your id for the member |
 | `voluntary_plan_ids` | no | Plans to enrol the member in; see below |
 
@@ -117,13 +117,13 @@ is no email.
 | `guardian_email` | no | The employee's email. Required unless `company_id` + `guardian_employee_code` are sent |
 | `company_id` + `guardian_employee_code` | no | The employee's company and `employee_code`, for employees without an email |
 | `dependent_code` | no | Your id for the dependant. Unique per employee, case-insensitive |
-| `email` | no | |
-| `first_name` | yes | Value required |
-| `last_name` | yes | |
-| `date_of_birth` | yes | `DD-MM-YYYY` or `DD/MM/YYYY`, in the past |
+| `email` | no | Must be a valid email when sent |
+| `first_name` | yes | Value required. Letters and spaces only |
+| `last_name` | yes | Letters and spaces only |
+| `date_of_birth` | yes | `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099), not in the future |
 | `gender` | yes | `Male` or `Female` (any case) |
 | `mobile_number` | yes | 10 digits, no country code |
-| `relation` | yes | `Father`, `Mother`, `Brother`, `Sister`, `Husband`, `Wife`, `Son`, `Daughter`, `Father in law` or `Mother in law` |
+| `relation` | yes | `Father`, `Mother`, `Brother`, `Sister`, `Husband`, `Wife`, `Son`, `Daughter`, `Father in law` or `Mother in law` (any case) |
 | `api_customer_id` | no | Your id for the dependant |
 | `authorised_dependent` | no | `Yes` or `No`; defaults to `Yes` |
 
@@ -148,7 +148,7 @@ object; the two forms can be mixed:
 |---|---|
 | `plan_id` | Required |
 | `start_date` | `DD-MM-YYYY` or `YYYY-MM-DD`; defaults to today. Refused if after the plan's end date |
-| `additional` | `true` adds another subscription to the plan, up to its limit. Otherwise a subscription the member already holds is reused. Counts only with `subscription_id` |
+| `additional` | `true`/`false` (also `"true"`, `"false"`, `1`, `0`). `true` adds another subscription to the plan, up to its limit. Otherwise a subscription the member already holds is reused. Counts only with `subscription_id` |
 | `subscription_id` | Your own order id. Resending it returns the subscription it created, so retries never duplicate it |
 
 The resulting subscriptions are listed in the status (`customer_plans`) and by
@@ -187,7 +187,9 @@ Dependants:
   `relation`, `authorised_dependent`, `api_customer_id`. Sending `dependent_code` on a
   dependant found another way sets or changes its code; an empty one never clears it.
 
-On update, `mobile_number` is stored as the member's alternate mobile number.
+On update, `mobile_number` is stored as the member's alternate mobile number and must be
+10 digits. `gender` must be `Male`, `Female` or `Non-binary` (any case). Other values are
+not format-checked on update.
 
 ## Deactivate members or dependants
 

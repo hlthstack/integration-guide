@@ -14,7 +14,7 @@ Doctor appointments. Schemas are in [`openapi.yaml`](../openapi/openapi.yaml) (t
 1. `GET /api/consultations/inclinic_consultation/providers?package_ids=...&pincode=...`
    (or `latitude`/`longitude`). Optional: `radius`, `page`, `per_page` (max 50),
    `sort_by` (`fee`, `experience`, `distance`, `rating`, `visited_before`), `sort_asc`,
-   `gender` (`Male`, `Female`, `Non-binary`). `sort_by=visited_before` also needs
+   `gender` (`Male`, `Female`, `Non-binary`, any case). `sort_by=visited_before` also needs
    `api_customer_id`. Each provider carries doctor details (`doctor_name`,
    `doctor_specialities`, `doctor_fee_details`, `hospital_name`, ...).
 2. `GET /api/providers/{provider_id}/inclinic_consultation/slots?package_ids=...`
@@ -37,8 +37,12 @@ Doctor appointments. Schemas are in [`openapi.yaml`](../openapi/openapi.yaml) (t
 }
 ```
 
-`address` (the member's) is required for in-clinic. The consultation is booked for the first
-customer in `customers`.
+`address` (the member's) is required for in-clinic, including `pincode` (it is not derived
+from the coordinates here). `service_mode` is optional, but when sent it must match the
+consultation type. `appointment_date_time` must be in the future (a time without an offset
+is read as IST). Customers follow the same rules as health-checkup bookings: distinct
+alphanumeric `api_customer_id`s, 10-digit `mobile_number`, lowercase `gender`, and a `dob`
+at least 1 year ago. The consultation is booked for the first customer in `customers`.
 
 4. `GET /api/consultations/inclinic_consultation/{appointment_id}` for details, including
    `hospital_name`, `hospital_location`, `hospital_address`, `latitude`, `longitude`.
@@ -89,8 +93,8 @@ customer in `customers`.
 
 ## Reschedule and cancel
 
-- `PATCH /api/consultations/{appointment_id}/reschedule` with `{"appointment_date_time": "..."}`.
-  Same doctor only (to change doctor, cancel and book again).
+- `PATCH /api/consultations/{appointment_id}/reschedule` with `{"appointment_date_time": "..."}`
+  (must be in the future). Same doctor only (to change doctor, cancel and book again).
 - `PATCH /api/consultations/{appointment_id}/cancel`. Success is `{"msg": "Appointment cancelled"}`
   (note `msg`, not `message`).
 

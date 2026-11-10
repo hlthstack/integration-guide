@@ -55,14 +55,14 @@ An earlier `booking_date` returns `400 {"message": "Booking date ... is before t
 | `appointment_type` | yes | `inclinic` or `home_collection` (the provider and package must support it) |
 | `service_name` | yes | e.g. `ahc` |
 | `customers[]` | yes | One entry per member, see below |
-| `address` | home collection | `address_line_one`, `address_line_two` (each up to 254 chars), `city`, `state`, `country` (India), `pincode` (6 digits), `latitude`, `longitude` |
+| `address` | home collection | `address_line_one`, `address_line_two` (each up to 254 chars), `city`, `state`, `country` (India), `pincode` (6 digits; derived from the coordinates when omitted), `latitude`, `longitude` (non-negative decimals). The address lines, city, state and country must not contain any other 6-digit pincode |
 | `plan_id` | no | Defaults to the base plan |
 | `customer_plan_id` / `subscription_id` | no | Pick which subscription pays, see [wallet.md](wallet.md) |
 | `api_partner_order_id` | no | Your order reference (a per-customer value overrides it) |
 
 `customers[]` fields: `name`, `api_customer_id` (your id, alphanumeric, unique within the
 request), `mobile_number` (10 digits, no `+91`), `gender` (`male`, `female`, `non-binary`;
-lowercase), `dob` (`YYYY-MM-DD`), `package_ids`, and optionally `booking_customer`, `vip`,
+lowercase), `dob` (`YYYY-MM-DD`; members must be at least 1 year old), `package_ids`, and optionally `booking_customer`, `vip`,
 `api_partner_order_id`. The booking customer is the last entry with `booking_customer: true`,
 or the first entry.
 
