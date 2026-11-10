@@ -82,6 +82,21 @@ Up to 5 retries over about 24 minutes (12 s, 36 s, 108 s, 324 s, 972 s), for con
 errors, timeouts and HTTP 408/502/503/504. Other error responses (400, 401, 404, 500, ...)
 are final and not retried. See [webhooks.md](webhooks.md#delivery-and-retries).
 
+## Pre-registration
+
+**Can I use my booking API token for pre-registration?**
+No. Pre-registration has its own login and token: get it from
+`GET /api/pre_registration/access-token` and send it as `X-EKINCARE-KEY`. See
+[pre-registration.md](pre-registration.md).
+
+**Why is a row missing from the status?**
+On create, every required key must be present in every row (even with an empty value). Rows
+missing a key are dropped without being reported.
+
+**How do I know a pre-registration finished?**
+Poll `GET /v1/corporate/pre_registrations/{request_id}/status` until `status` is
+`completed`, then read `success_records` and `failure_records`.
+
 ## Operations
 
 **Is there a request timeout I should design around?**

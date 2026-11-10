@@ -1,6 +1,6 @@
 ---
 name: hlthstack-api
-description: Integrate with or call the hlthstack health-benefits REST API (health checkup and lab test bookings, doctor consultations, ePharmacy orders, benefit wallets, webhooks). Use when writing code against api.hlthstack.io, debugging hlthstack API calls or webhooks, or answering questions about hlthstack endpoints.
+description: Integrate with or call the hlthstack health-benefits REST API (health checkup and lab test bookings, doctor consultations, ePharmacy orders, benefit wallets, member pre-registration, webhooks). Use when writing code against api.hlthstack.io, debugging hlthstack API calls or webhooks, or answering questions about hlthstack endpoints.
 ---
 
 # hlthstack API
@@ -13,11 +13,15 @@ operation in the spec before writing a call. Don't invent endpoints, fields or e
 ## Essentials
 
 - Base URLs: production `https://api.hlthstack.io`, staging `https://staging-api.hlthstack.io`.
-  Only `/api/...` paths exist.
+  Only `/api/...` paths and the pre-registration paths `/v1/corporate/pre_registrations...`
+  exist.
 - Auth: `GET /api/get-access-token` with HTTP Basic (partner username/password) returns
   `access_token` and `expires_at` (1 hour). Send `Authorization: Bearer <token>` on every
   other call. Refresh before expiry; there is no refresh token.
 - Multi-entity partners add `API-ENTITY-ID` and `API-SECRET-KEY` headers.
+- Pre-registration uses separate credentials: `GET /api/pre_registration/access-token` (HTTP
+  Basic) returns a token sent as `X-EKINCARE-KEY: <token>` (no `Bearer`). Its `expires_at`
+  is `YYYY-MM-DD HH:MM:SS UTC`, not ISO 8601. 401/403 bodies are empty.
 - Credentials, the entity secret key and the webhook secret are server-side secrets. Read
   them from environment variables; never hard-code them, print them, or put them in client
   code.
@@ -37,6 +41,11 @@ operation in the spec before writing a call. Don't invent endpoints, fields or e
   `getFulfillmentOptions` -> `getOrderPaymentDetails` -> `createOrder` -> `getOrder`;
   `confirmOrder` (partner-collected payments only), `cancelOrder`.
 - Wallet: `getCustomerWallet`, `listCustomerPlans` (path includes the partner's company slug).
+- Pre-registration (async): `getPreRegistrationAccessToken` -> `createPreRegistrations` /
+  `updatePreRegistrations` / `deactivatePreRegistrations` (each returns `request_id`) ->
+  poll `getPreRegistrationStatus` until `status` is `completed`. On create, every required
+  key must be present in every row (empty values allowed) or the row is silently dropped;
+  at most 250 rows per request. See `docs/pre-registration.md`.
 - Staging-only simulators (tag Testing): `simulateAppointmentStatus`,
   `simulateConsultationStatus`, `simulateOrderStatus`.
 
@@ -71,5 +80,5 @@ are not retried. Payload schemas are under `webhooks` in the spec; verification 
 ## When calling the live API on the user's behalf
 
 Use staging unless the user explicitly asks for production. Confirm with the user before
-creating, rescheduling or cancelling real bookings or orders, since these affect real members
-and benefit balances.
+creating, rescheduling or cancelling real bookings or orders, or pre-registering, updating or
+deactivating members, since these affect real members and benefit balances.

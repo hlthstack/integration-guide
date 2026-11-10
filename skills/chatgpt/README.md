@@ -20,8 +20,10 @@ Set up a ChatGPT custom GPT that can explain and call the hlthstack API.
    - **Authentication**: choose **API Key** -> **Bearer**, and paste an access token from
      `GET /api/get-access-token`. Tokens expire after 1 hour, so update the key when it
      stops working. Don't give the GPT your API username and password.
-   - Optionally remove operations you don't want the GPT to call (for example the `Testing`
-     tag, or create/cancel operations for a read-only assistant). Custom GPT actions only
+   - Remove the `Pre-registration` operations: they use a different token (`X-EKINCARE-KEY`)
+     and a GPT action has only one authentication setting. Optionally remove other
+     operations you don't want the GPT to call (for example the `Testing` tag, or
+     create/cancel operations for a read-only assistant). Custom GPT actions only
      use one server and don't call webhooks.
 6. **Privacy policy**: required by ChatGPT when actions are enabled; use your own policy URL.
 7. Save, and choose who can access the GPT. Keep it private if the action key is set: anyone

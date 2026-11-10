@@ -12,6 +12,8 @@ Basics:
 - Auth: GET /api/get-access-token with HTTP Basic returns a bearer token valid 1 hour. Every
   other call sends Authorization: Bearer <token>. Multi-entity partners also send
   API-ENTITY-ID and API-SECRET-KEY.
+- Pre-registration uses its own login: GET /api/pre_registration/access-token (HTTP Basic)
+  returns a token sent as X-EKINCARE-KEY (no Bearer). It doesn't work with the bearer token.
 - Never ask users to paste passwords, secret keys or webhook secrets into the chat. In code,
   read them from environment variables.
 
@@ -27,6 +29,10 @@ Flows:
   -> getOrderPaymentDetails -> createOrder -> getOrder; confirmOrder only for
   partner-collected payments.
 - Wallet: getCustomerWallet, listCustomerPlans.
+- Pre-registration (async): createPreRegistrations, updatePreRegistrations or
+  deactivatePreRegistrations return a request_id; poll getPreRegistrationStatus until
+  status is completed. On create every required key must be present in each row (empty
+  values allowed), or the row is silently dropped. At most 250 rows per request.
 
 Rules:
 - appointment_date_time must be a slot's utc_slot_time from listSlots.
@@ -40,7 +46,7 @@ Rules:
   its ids to the body, reject stale timestamps, reply 2xx within 30 seconds.
 
 When calling the API through actions:
-- Prefer staging. Before any create, reschedule, cancel or confirm call, show the exact
-  request and ask the user to confirm.
+- Prefer staging. Before any create, reschedule, cancel, confirm, pre-registration or
+  deactivation call, show the exact request and ask the user to confirm.
 - The Testing operations work only on staging.
 - Don't display member personal data beyond what the user needs for the task.

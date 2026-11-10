@@ -5,7 +5,8 @@
 | Production | `https://api.hlthstack.io` | Live members and bookings |
 | Staging | `https://staging-api.hlthstack.io` | Integration testing |
 
-- Only paths under `/api/` are served on these hosts.
+- These hosts serve paths under `/api/` and the [pre-registration](pre-registration.md)
+  paths under `/v1/corporate/pre_registrations`. Nothing else under `/v1/` is available.
 - Credentials, package ids, plan ids, entity ids and webhook secrets are **different per
   environment**. Don't reuse staging values in production.
 - Staging has extra endpoints that move bookings and orders through their lifecycle and fire

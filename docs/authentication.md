@@ -55,6 +55,12 @@ Header errors are `400 {"message": "..."}`:
 If the entity's contract is not enabled for API booking, every call returns
 `400 {"message": "The entity is not enabled for API booking."}`. Contact hlthstack.
 
+## Pre-registration
+
+The pre-registration endpoints use separate credentials and a separate token, sent as
+`X-EKINCARE-KEY` instead of `Authorization: Bearer`. See
+[pre-registration.md](pre-registration.md#authentication).
+
 ## Keep credentials secret
 
 Credentials, tokens, the entity secret key and the webhook secret are server-side secrets.

@@ -2,7 +2,8 @@
 
 hlthstack is a health-benefits API for partners. Through it you can book health checkups
 and lab tests, in-clinic and online doctor consultations, and ePharmacy orders for your
-members, check their benefit wallets, and receive status updates by webhook.
+members, check their benefit wallets, register your members and their dependants in bulk,
+and receive status updates by webhook.
 
 ## Ways to integrate
 
@@ -21,14 +22,17 @@ members, check their benefit wallets, and receive status updates by webhook.
 | Production | `https://api.hlthstack.io` |
 | Staging | `https://staging-api.hlthstack.io` |
 
-Only paths under `/api/` are served on these hosts. Staging has separate credentials and
-extra endpoints for simulating status changes. See [docs/environments.md](docs/environments.md).
+These hosts serve paths under `/api/` and the pre-registration paths under
+`/v1/corporate/pre_registrations`. Staging has separate credentials and extra endpoints for
+simulating status changes. See [docs/environments.md](docs/environments.md).
 
 ## Getting credentials
 
 Contact hlthstack through https://www.hlthstack.io/. At onboarding you receive:
 
 - an API username and password (per environment),
+- if you use pre-registration, a separate pre-registration login (email and password) and
+  your company ids,
 - your package ids and plan ids,
 - your company slug (for the wallet endpoints),
 - for multi-entity partners, entity ids and an API secret key,
@@ -81,6 +85,7 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 - [Consultations](docs/consultations.md)
 - [ePharmacy](docs/epharmacy.md)
 - [Wallet](docs/wallet.md)
+- [Pre-registration](docs/pre-registration.md): register, update and deactivate members
 - [Webhooks](docs/webhooks.md)
 - [Errors](docs/errors.md)
 - [Testing on staging](docs/testing.md)

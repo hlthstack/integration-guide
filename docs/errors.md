@@ -12,6 +12,7 @@ body defensively. The shapes you will see:
 | Success flag | `{"success": false, "message": "Order not found"}` | ePharmacy |
 | Booking failure | `{"msg": "...", "recall": false}` | Booking could not be placed |
 | Single error | `{"error": "Invalid company slug for authenticated partner."}` | Wallet endpoints |
+| Empty body | (no body) | Pre-registration 401 and 403. Row-level errors are in the status response; see [pre-registration.md](pre-registration.md) |
 
 ## Status codes
 
