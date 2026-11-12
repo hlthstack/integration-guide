@@ -91,22 +91,11 @@ Response:
 - A duplicate booking for the same member, package, provider and slot returns
   `422 {"errors":{"messages":["customer has an ongoing appointment for same package and provider for same slot"]}}`.
 
-### Quote before booking
-
-`POST /api/appointments/payment_details` with `provider_id`, `appointment_type`,
-`service_name` and `customers[{api_customer_id, package_ids}]` returns how the price splits
-across wallets and the amount the member would pay (`razorpay_amount`). Members must already
-exist with you as sponsor.
-
 ## Get a booking
 
 `GET /api/appointments?booking_id=...` returns every appointment in the booking; add
 `appointment_id=...` for one. Each appointment has the same shape as the webhook payload
 (status, provider, voucher link once confirmed, report links once received, payment).
-
-`GET /api/appointments/customer_appointments?api_customer_id=...` (or `employee_id`) lists
-a member's 50 most recent appointments, optionally filtered by `from_date`, `to_date`,
-`status`.
 
 ## Reschedule
 
