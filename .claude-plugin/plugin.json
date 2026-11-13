@@ -1,0 +1,8 @@
+{
+  "name": "hlthstack",
+  "description": "Teaches Claude the hlthstack health-benefits API: endpoints, auth, booking flows, webhooks and common pitfalls.",
+  "version": "1.0.0",
+  "author": { "name": "hlthstack", "url": "https://www.hlthstack.io/" },
+  "homepage": "https://github.com/hlthstack/integration-guide",
+  "repository": "https://github.com/hlthstack/integration-guide"
+}

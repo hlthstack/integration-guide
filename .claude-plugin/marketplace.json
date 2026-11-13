@@ -1,0 +1,12 @@
+{
+  "name": "hlthstack",
+  "description": "hlthstack API skills for Claude Code",
+  "owner": { "name": "hlthstack", "url": "https://www.hlthstack.io/" },
+  "plugins": [
+    {
+      "name": "hlthstack",
+      "source": "./",
+      "description": "Teaches Claude the hlthstack health-benefits API: endpoints, auth, booking flows, webhooks and common pitfalls."
+    }
+  ]
+}

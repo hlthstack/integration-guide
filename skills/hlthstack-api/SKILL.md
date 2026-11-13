@@ -26,7 +26,8 @@ operation in the spec before writing a call. Don't invent endpoints, fields or e
   them from environment variables; never hard-code them, print them, or put them in client
   code.
 - Prefer the official SDKs when the user's stack matches: https://github.com/hlthstack/js,
-  https://github.com/hlthstack/python. The web/PWA embed is https://github.com/hlthstack/web.
+  https://github.com/hlthstack/python, https://github.com/hlthstack/java. The web/PWA embed
+  is https://github.com/hlthstack/web.
 
 ## Main flows (operationIds from the spec)
 

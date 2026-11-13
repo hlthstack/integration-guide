@@ -12,8 +12,9 @@ and receive status updates by webhook.
 | REST API | The HTTP API: OpenAPI spec and guides | This repo: [`openapi/openapi.yaml`](openapi/openapi.yaml), [`docs/`](docs/) |
 | JavaScript | Server-side SDK for Node.js, plus a guide to calling the API with plain `fetch` | https://github.com/hlthstack/js |
 | Python | SDK (sync and async), plus a guide to calling the API with plain `requests` | https://github.com/hlthstack/python |
+| Java | SDK for Java 11+, plus a guide to calling the API with the JDK's `HttpClient` | https://github.com/hlthstack/java |
 | Web / PWA embed | Embed the hlthstack member experience in your app or site | https://github.com/hlthstack/web |
-| AI assistant skills | Instructions that teach Claude and ChatGPT to use this API | This repo: [`skills/`](skills/) |
+| AI assistant skills | A skill that teaches Claude Code and Codex to use this API, plus a ChatGPT setup | This repo: [`skills/`](skills/), install guide in [docs/ai-skills.md](docs/ai-skills.md) |
 
 ## Environments
 
@@ -90,3 +91,4 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 - [Errors](docs/errors.md)
 - [Testing on staging](docs/testing.md)
 - [FAQ](docs/faq.md)
+- [AI coding assistant skills](docs/ai-skills.md): install and run the skill in Claude Code and Codex
