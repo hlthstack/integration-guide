@@ -35,13 +35,8 @@ The same commands work inside a Claude Code session:
 /plugin install hlthstack@hlthstack
 ```
 
-To share it with your team, install it at project scope from your project's folder. This
-records the plugin in `.claude/settings.json`; commit that file, and teammates are offered
-the plugin when they open the project:
-
-```bash
-claude plugin install hlthstack@hlthstack --scope project
-```
+Each developer runs these once. To give your whole team the skill without any install
+step, use option 2 at project level and commit the folder.
 
 Check it's installed:
 
@@ -68,6 +63,7 @@ claude plugin marketplace remove hlthstack
 For all your projects (personal skill):
 
 ```bash
+rm -rf /tmp/hlthstack-integration-guide
 git clone --depth 1 https://github.com/hlthstack/integration-guide.git /tmp/hlthstack-integration-guide
 mkdir -p ~/.claude/skills
 cp -R /tmp/hlthstack-integration-guide/skills/hlthstack-api ~/.claude/skills/
@@ -77,6 +73,7 @@ For one project only, run this from the project's root and commit the folder so 
 gets it too:
 
 ```bash
+rm -rf /tmp/hlthstack-integration-guide
 git clone --depth 1 https://github.com/hlthstack/integration-guide.git /tmp/hlthstack-integration-guide
 mkdir -p .claude/skills
 cp -R /tmp/hlthstack-integration-guide/skills/hlthstack-api .claude/skills/
@@ -139,6 +136,7 @@ Codex.
 For all your projects:
 
 ```bash
+rm -rf /tmp/hlthstack-integration-guide
 git clone --depth 1 https://github.com/hlthstack/integration-guide.git /tmp/hlthstack-integration-guide
 mkdir -p ~/.agents/skills
 cp -R /tmp/hlthstack-integration-guide/skills/hlthstack-api ~/.agents/skills/
@@ -147,6 +145,7 @@ cp -R /tmp/hlthstack-integration-guide/skills/hlthstack-api ~/.agents/skills/
 For one project only, run this from the repository root and commit the folder:
 
 ```bash
+rm -rf /tmp/hlthstack-integration-guide
 git clone --depth 1 https://github.com/hlthstack/integration-guide.git /tmp/hlthstack-integration-guide
 mkdir -p .agents/skills
 cp -R /tmp/hlthstack-integration-guide/skills/hlthstack-api .agents/skills/
