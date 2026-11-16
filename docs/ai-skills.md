@@ -131,6 +131,14 @@ codex
 Codex usually picks up a new skill on its own; if `$hlthstack-api` doesn't show up, restart
 Codex.
 
+The installer puts the skill in `~/.codex/skills/hlthstack-api` (under `$CODEX_HOME` if you
+set it). To update, delete that folder and run the install again; to remove the skill,
+delete the folder:
+
+```bash
+rm -rf ~/.codex/skills/hlthstack-api
+```
+
 ### Option 2: copy the skill folder
 
 For all your projects:
