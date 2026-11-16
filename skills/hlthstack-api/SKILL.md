@@ -6,9 +6,14 @@ description: Integrate with or call the hlthstack health-benefits REST API (heal
 # hlthstack API
 
 hlthstack is a partner API for booking and managing members' health benefits. The source of
-truth is the OpenAPI 3.1 spec at `openapi/openapi.yaml` in
-https://github.com/hlthstack/integration-guide; guides are in `docs/`. Read the relevant
-operation in the spec before writing a call. Don't invent endpoints, fields or enum values.
+truth is the OpenAPI 3.1 spec, bundled with this skill as `references/openapi.yaml`, and the
+guides are next to it in `references/` (`authentication.md`, `health-checkups.md`,
+`consultations.md`, `epharmacy.md`, `wallet.md`, `pre-registration.md`, `webhooks.md`,
+`errors.md`, `testing.md`, `environments.md`, `faq.md`). Both are also on GitHub at
+https://github.com/hlthstack/integration-guide. Before writing a call or answering, read the
+operation in the spec (search it by `operationId` rather than reading it whole) and the guide
+for its area. Don't invent endpoints, fields or enum values; if neither documents something,
+say so.
 
 ## Essentials
 
@@ -46,7 +51,7 @@ operation in the spec before writing a call. Don't invent endpoints, fields or e
   `updatePreRegistrations` / `deactivatePreRegistrations` (each returns `request_id`) ->
   poll `getPreRegistrationStatus` until `status` is `completed`. On create, every required
   key must be present in every row (empty values allowed) or the row is silently dropped;
-  at most 250 rows per request. See `docs/pre-registration.md`.
+  at most 250 rows per request. See `references/pre-registration.md`.
 - Staging-only simulators (tag Testing): `simulateAppointmentStatus`,
   `simulateConsultationStatus`, `simulateOrderStatus`.
 
@@ -64,7 +69,7 @@ operation in the spec before writing a call. Don't invent endpoints, fields or e
   `delivery_option`. Pass the chosen option's `vendor_id` as `medicine_vendor_id` and its
   `location_token` to `createOrder`. Check nested `success` flags in fulfillment options.
 - Error bodies vary (`errors` object, `errors.messages`, `message`, `msg`, `error`); see
-  `docs/errors.md`. A 401 with plain text `HTTP Token: Access denied.` means the token is bad
+  `references/errors.md`. A 401 with plain text `HTTP Token: Access denied.` means the token is bad
   or expired.
 - Never rename fields to match a preferred style: send and read field names exactly as the
   spec shows.
@@ -76,7 +81,7 @@ partner's webhook secret. It doesn't cover the body, so verify the signature, ch
 ids (`appointment_id`/`booking_id`, `order_id` or `request_id`) match the body, and reject
 stale `timestamp`s. Reply 2xx within 30 s and process asynchronously; most non-2xx replies
 are not retried. Payload schemas are under `webhooks` in the spec; verification code is in
-`docs/webhooks.md`.
+`references/webhooks.md`.
 
 ## When calling the live API on the user's behalf
 

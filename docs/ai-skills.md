@@ -8,11 +8,12 @@ the OpenAPI spec instead of guessing endpoints, and asks before it creates, resc
 cancels anything.
 
 The skill follows the open [Agent Skills](https://agentskills.io/) format (a folder with a
-`SKILL.md`), so the same folder works in Claude Code, OpenAI Codex and ChatGPT. The repo is
-also a plugin marketplace for both Claude (`.claude-plugin/`) and OpenAI
-(`.agents/plugins/marketplace.json` and `.codex-plugin/`). Installing it as a plugin brings
-the OpenAPI spec and these guides along with the skill, so the assistant can read them
-locally.
+`SKILL.md`), so the same folder works in Claude Code, OpenAI Codex and ChatGPT. The folder is
+self-contained: `references/` holds copies of the OpenAPI spec and the API guides, so the
+assistant reads them locally however the skill was installed, without fetching anything. The
+repo is also a plugin marketplace for both Claude (`.claude-plugin/`) and OpenAI
+(`.agents/plugins/marketplace.json` and `.codex-plugin/`), which keeps the skill up to date
+with this repo.
 
 | Tool | Quickest install | Run it |
 |---|---|---|
@@ -120,7 +121,7 @@ claude -p "Using the hlthstack API, which header does pre-registration use for i
 ### Option 1: install as a plugin (recommended)
 
 The repo is a Codex plugin marketplace. Installing the plugin keeps the skill up to date
-with this repo and brings the OpenAPI spec and guides with it.
+with this repo.
 
 ```bash
 codex plugin marketplace add hlthstack/integration-guide
@@ -273,3 +274,15 @@ that GPT, replace it with the plugin or skill above.
 - "Write a script that pre-registers the members in `members.csv` on staging and polls until
   the request completes."
 - "Move our hlthstack calls from plain `fetch` to the `hlthstack` JS SDK."
+
+## Maintaining the skill
+
+`skills/hlthstack-api/references/` is generated from `openapi/` and `docs/`. After changing
+either, regenerate it and commit the result; CI fails if the copies are out of date:
+
+```bash
+python3 scripts/sync_skill_references.py
+```
+
+When the skill or its references change, bump `version` in both `.claude-plugin/plugin.json`
+and `.codex-plugin/plugin.json`, so plugin installs pick up the update.
