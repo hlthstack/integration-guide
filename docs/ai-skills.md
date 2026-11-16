@@ -8,13 +8,17 @@ the OpenAPI spec instead of guessing endpoints, and asks before it creates, resc
 cancels anything.
 
 The skill follows the open [Agent Skills](https://agentskills.io/) format (a folder with a
-`SKILL.md`), so the same folder works in Claude Code and OpenAI Codex. For ChatGPT, see
-[`skills/chatgpt`](../skills/chatgpt/README.md).
+`SKILL.md`), so the same folder works in Claude Code, OpenAI Codex and ChatGPT. The repo is
+also a plugin marketplace for both Claude (`.claude-plugin/`) and OpenAI
+(`.agents/plugins/marketplace.json` and `.codex-plugin/`). Installing it as a plugin brings
+the OpenAPI spec and these guides along with the skill, so the assistant can read them
+locally.
 
 | Tool | Quickest install | Run it |
 |---|---|---|
 | Claude Code | `claude plugin marketplace add hlthstack/integration-guide` then `claude plugin install hlthstack@hlthstack` | Ask about hlthstack, or type `/hlthstack:hlthstack-api` |
-| Codex | In Codex: `$skill-installer install https://github.com/hlthstack/integration-guide/tree/main/skills/hlthstack-api` | Ask about hlthstack, or type `$hlthstack-api` |
+| Codex | `codex plugin marketplace add hlthstack/integration-guide` then `codex plugin add hlthstack@hlthstack` | Ask about hlthstack, or type `$` and pick `hlthstack-api` |
+| ChatGPT (Business, Enterprise, Edu) | Admin imports `https://github.com/hlthstack/integration-guide` as a plugin marketplace, or upload the skill | Ask about hlthstack, or mention `@hlthstack` |
 
 ## Claude Code
 
@@ -113,10 +117,40 @@ claude -p "Using the hlthstack API, which header does pre-registration use for i
 
 ## Codex
 
-Codex reads skills from `.agents/skills` in your repository (from the folder you start
-Codex in up to the repository root) and from `~/.agents/skills` for your user.
+### Option 1: install as a plugin (recommended)
 
-### Option 1: install with Codex's skill installer
+The repo is a Codex plugin marketplace. Installing the plugin keeps the skill up to date
+with this repo and brings the OpenAPI spec and guides with it.
+
+```bash
+codex plugin marketplace add hlthstack/integration-guide
+codex plugin add hlthstack@hlthstack
+```
+
+Check it's available:
+
+```bash
+codex plugin list
+```
+
+Update to the latest version of the repo:
+
+```bash
+codex plugin marketplace upgrade hlthstack
+```
+
+Remove it:
+
+```bash
+codex plugin remove hlthstack@hlthstack
+codex plugin marketplace remove hlthstack
+```
+
+Codex also reads plain skill folders from `.agents/skills` in your repository (from the
+folder you start Codex in up to the repository root) and from `~/.agents/skills` for your
+user. Options 2 and 3 install the skill on its own that way.
+
+### Option 2: install with Codex's skill installer
 
 Start Codex and ask its built-in installer to fetch the skill from GitHub:
 
@@ -139,7 +173,7 @@ delete the folder:
 rm -rf ~/.codex/skills/hlthstack-api
 ```
 
-### Option 2: copy the skill folder
+### Option 3: copy the skill folder
 
 For all your projects:
 
@@ -165,7 +199,7 @@ To update, delete the copied `hlthstack-api` folder and copy it again.
 
 Start Codex in your project and ask about hlthstack; Codex uses the skill when the request
 matches its description. To pick it explicitly, type `$` and choose `hlthstack-api`, run
-`/skills`, or mention it in the prompt:
+`/skills`, or mention it in the prompt (installed as a skill folder):
 
 ```text
 > $hlthstack-api write a Python script that pre-registers members from members.csv on staging
@@ -178,6 +212,47 @@ codex exec '$hlthstack-api Which header does hlthstack pre-registration use for 
 ```
 
 Use single quotes so your shell doesn't expand `$hlthstack-api`.
+
+## ChatGPT
+
+ChatGPT uses the same skills and plugins as Codex. Skills and plugin uploads are available
+on ChatGPT Business, Enterprise, Healthcare and Edu, subject to your workspace settings.
+
+### Option 1: import the plugin marketplace (workspace admins)
+
+1. In ChatGPT, open **Admin console**, choose your workspace and open **Plugins**.
+2. Select **Add** -> **Import marketplace**.
+3. **Source**: `https://github.com/hlthstack/integration-guide`. Leave **Path** and
+   **Branch** empty.
+4. Select **Import marketplace**, authorize GitHub access if asked, then set the `hlthstack`
+   plugin's installation policy for your members.
+
+ChatGPT syncs the marketplace daily, so members get updates to the skill automatically.
+
+### Option 2: upload the skill
+
+1. Download the skill: on GitHub, open
+   [`skills/hlthstack-api`](https://github.com/hlthstack/integration-guide/tree/main/skills/hlthstack-api),
+   or clone the repo, and zip the `hlthstack-api` folder.
+2. In ChatGPT, select **Plugins** in the sidebar, open the **Skills** tab, then **Create** ->
+   **Upload from your computer**, and choose the zip.
+3. ChatGPT scans the skill; it's usually available as soon as the scan finishes. Share it
+   with your workspace from the skill's **•••** menu if you want.
+
+### Run it in ChatGPT
+
+Ask about hlthstack in any chat; ChatGPT uses the skill when it's relevant. To pick it
+explicitly, mention `@hlthstack` (plugin) or select the skill from **+** in the composer.
+
+ChatGPT can explain the API and write integration code with the skill, but it doesn't call
+the hlthstack API for you. Run the code it writes from your own environment.
+
+### Custom GPTs
+
+Earlier versions of this repo described a custom GPT with an action for the hlthstack API.
+OpenAI is retiring custom GPTs on 11 December 2026 (later for some Enterprise workspaces),
+and a GPT's custom actions don't carry over when it's migrated to a plugin. If you built
+that GPT, replace it with the plugin or skill above.
 
 ## Credentials and safety
 

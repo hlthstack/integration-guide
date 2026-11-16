@@ -1,0 +1,26 @@
+{
+  "name": "hlthstack",
+  "version": "1.0.0",
+  "description": "Teaches Codex and ChatGPT the hlthstack health-benefits API: endpoints, auth, booking flows, webhooks and common pitfalls.",
+  "author": {
+    "name": "hlthstack",
+    "url": "https://www.hlthstack.io/"
+  },
+  "homepage": "https://github.com/hlthstack/integration-guide",
+  "repository": "https://github.com/hlthstack/integration-guide",
+  "keywords": ["hlthstack", "health benefits", "api", "integration", "webhooks"],
+  "interface": {
+    "displayName": "hlthstack API",
+    "shortDescription": "Integrate with the hlthstack health-benefits API",
+    "longDescription": "Helps you write and debug code against the hlthstack partner API: authentication, health checkup and lab test bookings, doctor consultations, ePharmacy orders, benefit wallets, member pre-registration and webhook verification. It reads the OpenAPI spec instead of guessing endpoints, uses staging by default and asks before creating or cancelling anything.",
+    "developerName": "hlthstack",
+    "category": "Developer Tools",
+    "capabilities": ["Read"],
+    "websiteURL": "https://www.hlthstack.io/",
+    "defaultPrompt": [
+      "Use hlthstack-api to write a function that books a health checkup on staging.",
+      "Use hlthstack-api to add a webhook handler that verifies the hlthstack Signature header."
+    ]
+  },
+  "skills": "./skills/"
+}
