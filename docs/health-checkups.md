@@ -64,7 +64,12 @@ An earlier `booking_date` returns `400 {"message": "Booking date ... is before t
 request), `mobile_number` (10 digits, no `+91`), `gender` (`male`, `female`, `non-binary`;
 lowercase), `dob` (`YYYY-MM-DD`; members must be at least 1 year old), `package_ids`, and optionally `booking_customer`, `vip`,
 `api_partner_order_id`. The booking customer is the last entry with `booking_customer: true`,
-or the first entry.
+or the first entry. Set `booking_customer` on one entry only.
+
+There's no fixed limit on members per booking, but every member takes a place in the same
+slot. If the provider's slot can't take all of them, the booking fails with an
+`appointment_date_time` error that starts `Booking threshold reached` and ends
+`(its slots are full)`. Pick another slot or provider, or split the members across bookings.
 
 Response:
 
@@ -85,7 +90,8 @@ Response:
 - `status: "confirmed"` means the booking was paid from the wallet. The appointment itself
   starts at `new` and moves to `confirmed` when the provider confirms (you get a webhook).
 - `status: "payment_pending"` with `payment_link` (and `payment_link_expires_at`) means the
-  member must pay the remainder.
+  member must pay the remainder. Its appointments start at `payment_pending` and move to
+  `new` once the member pays.
 - Validation errors are `400 {"errors": {field: [messages]}}`; nested fields are prefixed,
   e.g. `customer_mobile_number`, `address_pincode`.
 - A duplicate booking for the same member, package, provider and slot returns
@@ -111,7 +117,9 @@ Rules:
   is first. In-clinic: until 30 minutes before the slot.
 - You can't change provider once the appointment is confirmed at the current one
   (`422 {"errors":{"provider_id":["Appointment cannot be rescheduled to a different provider."]}}`).
-- In-clinic can't be converted to home collection.
+- In-clinic can't be converted to home collection. An `address` sent when rescheduling an
+  in-clinic appointment is ignored without an error, and the appointment stays in-clinic. To
+  switch, cancel it and book again.
 
 Booking-level responses can be partial. `success` and `failed` are comma-separated
 appointment ids:
@@ -127,6 +135,13 @@ If nothing can be rescheduled: `400 {"errors":{"messages":["This booking cannot 
 - Whole booking: `PATCH /api/bookings/{booking_id}/cancel`
 - One appointment: `PATCH /api/appointments/{appointment_id}/cancel`
 
+Body (optional): `reason`, up to 255 characters, recorded as the cancellation reason.
+Without it, the reason is `Cancelled by your booking partner`.
+
+```json
+{ "reason": "Member is travelling" }
+```
+
 Same cut-offs as reschedule. Booking-level cancellation can be partial, in the same shape as
 above (`"Some appointments cannot be cancelled"`).
 
@@ -136,12 +151,17 @@ above (`"Some appointments cannot be cancelled"`).
 |---|---|---|
 | `GET /api/appointments/{id}/voucher` | Appointment `confirmed` | PDF. Before that: `400 voucher only available for download when appointment is confirmed` |
 | `GET /api/appointments/{id}/reports` | `partially_received` or `received` | `{"reports": [urls]}`, or `{"message": "Reports will be available to download once they are verified"}` |
+
+Report links (from this endpoint, `getAppointment` and the webhook's `reports`) are signed
+URLs that expire **5 minutes** after they're issued. Download the files right away, and fetch
+fresh links when you need them again; don't store the URLs.
 | `GET /api/appointments/{id}/lab_results` | After digitization | Structured values. Enabled on request; otherwise `401 Unauthorised` |
 
 ## Appointment statuses
 
 | Status | Meaning |
 |---|---|
+| `payment_pending` | The member hasn't paid the amount due yet (see `payment_link`) |
 | `new` | Waiting for confirmation from the centre |
 | `confirmed` | Confirmed; voucher available |
 | `rejected` | Rejected by the provider |
