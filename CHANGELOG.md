@@ -10,7 +10,17 @@ guides. The spec's `info.version` follows [semantic versioning](https://semver.o
   fields and enum values.
 - **Patch** (1.0.1): documentation fixes and clarifications; the API itself is unchanged.
 
-Each release is a git tag (`v1.0.1`). Watch this repository's releases to be notified.
+Each release is a git tag (`v1.0.2`). Watch this repository's releases to be notified.
+
+## 1.0.2 (2026-11-17)
+
+- `BenefitType` (used by `service_name`) lists only the services partners book through the
+  API: `ahc`, `dental`, `vision`, `fitness`, `pharmacy`, `flu_vaccination`,
+  `specialist_consultation`, `inclinic_consultation`, `consultation24x7` and `nhc`, instead
+  of every benefit type the platform knows.
+- Area guides follow the partner docs layout (overview, onboarding checklist, how it works,
+  rules, API reference, webhooks, statuses, troubleshooting). New guides: common errors,
+  product communications and white-labelling.
 
 ## 1.0.1 (2026-11-17)
 
