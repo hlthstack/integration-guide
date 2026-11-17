@@ -7,7 +7,7 @@ Book health checks, lab tests, dental and vision checkups and vaccinations at a 
 are in [`openapi.yaml`](../openapi/openapi.yaml) (tag **Health Checkups**).
 
 `service_name` values commonly used: `ahc` (health checks / diagnostics), `dental`, `vision`,
-`flu_vaccination`, `covid_vaccination`.
+`flu_vaccination`. The full list is in the API reference.
 
 | Term | Meaning |
 |---|---|
