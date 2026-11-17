@@ -128,6 +128,7 @@ def webhook():
   connection refused/reset, TLS errors, timeouts, and HTTP 408, 502, 503, 504.
 - **Not retried**: every other non-2xx, including 400, 401, 403, 404, 422, 429 and 500. If your
   endpoint rejected or missed events, reconcile with the GET endpoints.
+- If your endpoint has a temporary problem, return `503` (retried) rather than `500` (final).
 - Every attempt is logged on hlthstack's side; ask for a delivery report if you suspect gaps.
 - Ordering is not guaranteed. Each body is a full snapshot of the current state, so apply the
   latest one, use the JWT `timestamp` (and `event_timestamp` on appointments) to drop older
@@ -182,16 +183,18 @@ One shape for every status change; extra keys appear depending on the state.
 | `type` | Always. `reports_upload` when the status is `partially_received`/`received` and report links exist; otherwise `status_update` |
 | `booking_source` | Always. Fixed at booking time: `hlthstack-api` for bookings made through the hlthstack hosts |
 | `provider_*` | A provider is assigned |
-| `voucher_api_url` | The appointment is confirmed. Fetch it with your bearer token |
+| `voucher_api_url` | The appointment is confirmed. Fetch it with your bearer token. Online consultations have no voucher: ignore it for `specialist_consultation` |
 | `phlebo_name`, `phlebo_number` | Confirmed and a phlebotomist is assigned |
 | `reports` | `partially_received` or `received` |
 | `doctor_*`, `summary`, `doctor_prescriptions` | Consultations (`summary` is `null` and `doctor_prescriptions` empty until available) |
 | `hospital_name`, `hospital_location`, `hospital_address`, `latitude`, `longitude` | In-clinic consultations |
-| `meeting_link` | Video consultations |
+| `meeting_link` | Video consultations (`null` until the doctor confirms) |
 | `payment` | A payment exists |
 
 For statuses see [health-checkups.md](health-checkups.md#appointment-statuses) and
-[consultations.md](consultations.md#consultation-statuses).
+[consultations.md](consultations.md#consultation-statuses) (which also lists the typical
+consultation sequences). Consultations send no webhook while waiting for the member's
+co-pay (`payment_pending`).
 
 ## Lab results payload
 

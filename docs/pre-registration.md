@@ -3,6 +3,8 @@
 Register your members (employees) and their dependants with hlthstack in bulk, update them,
 and deactivate them when they leave. Every write is processed asynchronously: the call
 returns a `request_id`, and `getPreRegistrationStatus` reports each row's outcome.
+Registered members already have an account, linked to their company with their plans and
+dependants, when they first sign in.
 
 | Operation | Endpoint |
 |---|---|
@@ -44,7 +46,8 @@ not work on the booking API.
 
 - The token is valid for **1 hour**. `expires_at` is UTC but formatted
   `YYYY-MM-DD HH:MM:SS UTC`, not ISO 8601. There is no refresh token: request a new one
-  before it expires.
+  before it expires. Cache the token and reuse it across requests until shortly before
+  `expires_at`; don't request one per call.
 - A missing, invalid or expired token returns `401` with an **empty body**. So does any token
   once your company's contract has ended.
 - `403` with an empty body means the account's role may not use this API. Contact hlthstack.
@@ -80,6 +83,10 @@ curl -s -X POST "$BASE/v1/corporate/pre_registrations" \
 
 Send `employees`, `dependants` or both, with **at most 250 rows in total**. Employees are
 processed before dependants, so a dependant can refer to an employee in the same request.
+If an employee has no dependants, leave `dependants` out or send `[]`. To add a dependant to
+an employee registered earlier, send only `dependants`, linked by `guardian_email` (or
+`company_id` + `guardian_employee_code`); `updatePreRegistrations` only changes dependants
+that already exist.
 
 > **Every required key must be present in every row**, even when the value is empty (`""`
 > or `null`). A row missing one of them is dropped silently: it is neither registered nor
@@ -240,7 +247,14 @@ not format-checked on update.
 ```
 
 - `status` moves `initialized` -> `scheduled` -> `inprogress` -> `completed`. Records are
-  added while it is `inprogress`; poll (every few seconds, with backoff) until `completed`.
+  added while it is `inprogress`; poll (every few seconds, with backoff) until it is
+  `completed` or `failed`. `failed` means processing stopped part-way: rows already applied
+  are in `success_records`; resend the rest.
+- Larger requests take longer. If a request stays `inprogress` far longer than usual, send
+  its `request_id` to hlthstack.
+- To retry, fix the rows in `failure_records` and send only those rows in a new request.
+  Rows that succeeded already exist and would fail as duplicates. To change or remove a
+  registered member, use `updatePreRegistrations` or `deactivatePreRegistrations`, not create.
 - Create and update requests: success records are the members as stored, dependants
   included (`employee_code` holds a dependant's `dependent_code`; `guardian_email` and
   `relation` are set). `customer_plans` lists active, upcoming and grace-period

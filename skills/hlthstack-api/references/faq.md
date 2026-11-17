@@ -41,16 +41,18 @@ In `reports`, once the status is `partially_received` or `received`.
 **How do I reschedule, and what is the cut-off?**
 `PATCH /api/bookings/{booking_id}/reschedule` for the whole booking or
 `PATCH /api/appointments/{appointment_id}/reschedule` for one appointment.
-Home collection: until a phlebotomist is assigned or 30 minutes before the slot, whichever
-is first. In-clinic: until 30 minutes before. `appointment_date_time` is always required;
+Until 30 minutes before the slot. Some providers also refuse changes once a phlebotomist is
+assigned, or have other rules (see
+[booking rules](health-checkups.md#booking-rules)). `appointment_date_time` is always required;
 add `provider_id` to change provider, and `address` (with `provider_id`) to change a home
 collection address.
 
 **Can I change `appointment_type` when rescheduling?**
 No. An in-clinic appointment can't become home collection.
 
-**Can I move a confirmed appointment to another provider?**
-No: `Appointment cannot be rescheduled to a different provider.`
+**Can I move an appointment to another provider?**
+Not at providers connected through a partner integration: you get
+`Appointment cannot be rescheduled to a different provider.` Cancel and book again instead.
 
 **What do partial reschedule/cancel results look like?**
 Booking-level calls can return `{"message": "...", "success": "APT...,APT...", "failed": "APT..."}`
@@ -97,7 +99,8 @@ missing a key are dropped without being reported.
 
 **How do I know a pre-registration finished?**
 Poll `GET /v1/corporate/pre_registrations/{request_id}/status` until `status` is
-`completed`, then read `success_records` and `failure_records`.
+`completed` (or `failed`, if processing stopped part-way), then read `success_records` and
+`failure_records`. Resend only the corrected failed rows.
 
 ## Operations
 

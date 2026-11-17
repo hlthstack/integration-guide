@@ -25,7 +25,7 @@ body defensively. The shapes you will see:
 | 202 | Accepted for async processing (prescription digitization) |
 | 400 | Invalid parameters, invalid `plan_id` / subscription, bad entity headers, entity not enabled for API booking, or an action not allowed in the current state |
 | 401 | Missing, invalid or expired token: plain-text `HTTP Token: Access denied.`. `get-access-token` returns `{"message": "Wrong credentials"}`. Lab results not enabled: `{"errors":{"messages":["Unauthorised"]}}` |
-| 403 | The booking/appointment isn't yours (`invalid booking_id` / `invalid appointment_id`), the service isn't enabled for your plan, or the company slug doesn't match |
+| 403 | A well-formed booking/appointment id that isn't yours (`invalid booking_id` / `invalid appointment_id`); a malformed id returns 400. A 403 on every follow-up call usually means an id from the other environment or entity. Also: the service isn't enabled for your plan, or the company slug doesn't match |
 | 404 | Member, cart or order not found; staging-only route called in production |
 | 409 | Concurrent partner-payment confirmation; retry |
 | 422 | Business rule or processing failure, or an unexpected error |
@@ -37,12 +37,23 @@ body defensively. The shapes you will see:
 |---|---|
 | `this service is not enabled for you` | The `service_name` isn't on your plan |
 | `Invalid package ids: ...` | Use package ids shared for that service and plan |
+| `Invalid package ids: <id> (<reason>)` (consultations) | The reason says whether the package is unknown, inactive, not part of this service, or no longer on your plan; several are separated by `;` |
 | `invalid appointment time` / `provider slot not available ...` | Pick a slot from `listSlots` |
 | `Booking date ... is before the provider's earliest available date ...` | See "First bookable date" in [health-checkups.md](health-checkups.md) |
 | `customer has an ongoing appointment for same package and provider for same slot` | Duplicate booking |
 | `Appointment cannot be rescheduled to a different provider.` | The appointment is already confirmed at its provider |
 | `Previous request is in progress, please try ... after few minutes` | Wait and retry |
-| `Please wait N minute(s) before you reschedule this appointment.` | Consultations: 5-minute buffer after booking or reschedule |
+| `Please wait N minutes before you cancel this appointment.` | Consultations at clinics connected through a partner integration: wait 5 minutes after booking |
+| `Selected doctor does not fall under the priority category...` / `...schedule category...` | A priority booking needs a `provider_id` from `default_provider=true`; a scheduled booking must not use one |
+| `Priority consultation is disabled for the selected package` | Offer a scheduled consultation |
+| `does not have a doctor with matching speciality for the selected packages` | The doctor's speciality must match the package; list doctors for that package |
+| `The provider is temporarily unserviceable` | The doctor is inactive; pick another |
+| `Specialist appointments must be booked at least 90 minutes in advance` | Pick a later slot |
+| `The selected slot is not available for this doctor` | Pick another slot |
+| `service mode can't be blank` | Send `service_mode` when booking a consultation |
+| `You already have an appointment with this speciality within the next 4 hours.` | Priority: the member already has a `new` or `confirmed` consultation for this package within 4 hours |
+| `Consultations with this partner can only be moved/cancelled up to 2 hours before the slot.` | Some partner doctors need 2 hours' notice |
+| `sort_by is only supported for inclinic_consultation` / `gender is only supported for inclinic_consultation` | Don't send these for `specialist_consultation` |
 
 ## Retrying
 

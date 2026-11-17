@@ -91,11 +91,37 @@ Response:
   starts at `new` and moves to `confirmed` when the provider confirms (you get a webhook).
 - `status: "payment_pending"` with `payment_link` (and `payment_link_expires_at`) means the
   member must pay the remainder. Its appointments start at `payment_pending` and move to
-  `new` once the member pays.
+  `new` once the member pays. The link stops working at `payment_link_expires_at`: normally
+  17:00 (provider time) the day before the slot, or 2 hours after booking for bookings made
+  later than that. An unpaid booking is never confirmed, and no webhook is sent while it is
+  `payment_pending`.
 - Validation errors are `400 {"errors": {field: [messages]}}`; nested fields are prefixed,
   e.g. `customer_mobile_number`, `address_pincode`.
 - A duplicate booking for the same member, package, provider and slot returns
   `422 {"errors":{"messages":["customer has an ongoing appointment for same package and provider for same slot"]}}`.
+
+Other failures: `422 {"msg": "failed to create booking please try again later", "recall": false}`,
+and `422 {"msg": "Failed to confirm booking due to payment failure.", ...}` when the benefit
+deduction failed (the wallet is not charged).
+
+## Booking rules
+
+These apply when you book and when you reschedule or cancel:
+
+- **Booking hours:** the slot must start between 06:00 and 20:59 IST (until 22:59 at some
+  providers), otherwise `appointment time is outside provider booking hours`. Booking with a
+  slot's `utc_slot_time` keeps you inside these hours.
+- **Day's notice:** at a provider with a `slot_lead_time` of 1 or more, a time today fails
+  with `provider requires at least one day's notice`.
+- **Time zone:** a time without `Z` or an offset is read as UTC. Always send the offset; the
+  safest value is the slot's `utc_slot_time`.
+- **Recent changes:** at providers connected through a partner integration, an appointment
+  booked or rescheduled less than 5 minutes ago can't be changed yet (`This appointment cannot be rescheduled` / `This appointment cannot be
+  cancelled`). Retry after a few minutes.
+- **Provider rules:** some providers don't accept changes after confirmation or after a
+  phlebotomist is assigned, limit the number of reschedules, stop changes to next-day
+  bookings after a cut-off the evening before, or don't allow same-day cancellation. If the
+  booking wasn't made or changed in the last 5 minutes, treat such a refusal as final.
 
 ## Get a booking
 
@@ -113,10 +139,15 @@ for home collection, `address` together with `provider_id` to change the address
 
 Rules:
 
-- Home collection: until a phlebotomist is assigned or 30 minutes before the slot, whichever
-  is first. In-clinic: until 30 minutes before the slot.
-- You can't change provider once the appointment is confirmed at the current one
-  (`422 {"errors":{"provider_id":["Appointment cannot be rescheduled to a different provider."]}}`).
+- Until 30 minutes before the slot. Some providers also refuse changes once a phlebotomist is
+  assigned (see [Booking rules](#booking-rules)).
+- Appointments at providers connected through a partner integration can't move to another
+  provider: sending a different `provider_id` returns
+  `422 {"errors":{"provider_id":["Appointment cannot be rescheduled to a different provider."]}}`.
+  Cancel and book again instead.
+- The new date must fall inside the plan's service period, otherwise
+  `400 {"errors":{"messages":["The slots are not available for the selected date. please reschedule the appointment for next available date"]}}`.
+  A booking whose plan is no longer active can't be rescheduled.
 - In-clinic can't be converted to home collection. An `address` sent when rescheduling an
   in-clinic appointment is ignored without an error, and the appointment stays in-clinic. To
   switch, cancel it and book again.
