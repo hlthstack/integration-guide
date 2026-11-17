@@ -34,10 +34,20 @@ info:
     depend on stored data (plan benefits, slot availability, provider capability) are not
     encoded and are reported by the server.
 
-    Guides: https://github.com/hlthstack/integration-guide/tree/main/docs
+    Guides: https://github.com/hlthstack/integration-guide/tree/main/docs. Getting started:
+    https://github.com/hlthstack/integration-guide/blob/main/docs/getting-started.md.
+
+    **Postman.** Import the collection
+    (https://developers.hlthstack.io/postman/hlthstack.postman_collection.json) and the
+    staging (https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json)
+    or production (https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json)
+    environment, then fill in your credentials. Tokens are fetched for you.
   contact:
     name: hlthstack
     url: https://www.hlthstack.io/
+  license:
+    name: MIT
+    identifier: MIT
 servers:
   - url: https://api.hlthstack.io
     description: Production

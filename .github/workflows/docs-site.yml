@@ -1,0 +1,54 @@
+name: Docs site
+
+# Lints the spec on every push and pull request. On main, builds the API reference and the
+# Postman collection and publishes them to https://developers.hlthstack.io.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Lint the spec
+        run: npx -y @redocly/cli@1.34.0 lint openapi/openapi.yaml
+      - name: Build the API reference
+        run: npx -y @redocly/cli@1.34.0 build-docs openapi/openapi.yaml -o site/index.html
+      - name: Build the Postman collection
+        run: |
+          mkdir -p build
+          npx -y openapi-to-postmanv2@4.25.0 -s openapi/openapi.yaml -o build/converted.json -p \
+            -O folderStrategy=Tags,requestParametersResolution=Example,exampleParametersResolution=Example
+          npx -y @redocly/cli@1.34.0 bundle openapi/openapi.yaml --dereferenced --ext json -o build/openapi.json
+          python scripts/build_postman.py build/converted.json build/openapi.json site/postman
+          cp openapi/openapi.yaml site/openapi.yaml
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

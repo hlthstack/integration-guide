@@ -5,11 +5,22 @@ and lab tests, in-clinic and online doctor consultations, and ePharmacy orders f
 members, check their benefit wallets, register your members and their dependants in bulk,
 and receive status updates by webhook.
 
+**New here?** Start with [Getting started](docs/getting-started.md).
+
+- **API reference:** https://developers.hlthstack.io
+- **Postman:** in Postman choose **Import** and paste the
+  [collection](https://developers.hlthstack.io/postman/hlthstack.postman_collection.json) link,
+  then the [staging](https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json)
+  or [production](https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json)
+  environment link.
+- **OpenAPI spec:** [`openapi/openapi.yaml`](openapi/openapi.yaml), version 1.0.0.
+- **Changes:** [CHANGELOG.md](CHANGELOG.md).
+
 ## Ways to integrate
 
 | Integration | What it is | Where |
 |---|---|---|
-| REST API | The HTTP API: OpenAPI spec and guides | This repo: [`openapi/openapi.yaml`](openapi/openapi.yaml), [`docs/`](docs/) |
+| REST API | The HTTP API: reference, OpenAPI spec, guides and Postman collection | https://developers.hlthstack.io, and this repo: [`openapi/openapi.yaml`](openapi/openapi.yaml), [`docs/`](docs/) |
 | JavaScript | Server-side SDK for Node.js, plus a guide to calling the API with plain `fetch` | https://github.com/hlthstack/js |
 | Python | SDK (sync and async), plus a guide to calling the API with plain `requests` | https://github.com/hlthstack/python |
 | Java | SDK for Java 11+, plus a guide to calling the API with the JDK's `HttpClient` | https://github.com/hlthstack/java |
@@ -80,6 +91,7 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 
 ## Guides
 
+- [Getting started](docs/getting-started.md): from access request to go-live
 - [Authentication](docs/authentication.md)
 - [Environments](docs/environments.md)
 - [Health checkups and lab tests](docs/health-checkups.md)
@@ -92,3 +104,13 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 - [Testing on staging](docs/testing.md)
 - [FAQ](docs/faq.md)
 - [AI coding assistant skills](docs/ai-skills.md): install and run the skill in Claude Code, Codex and ChatGPT
+
+## Support
+
+Contact your hlthstack account contact or https://www.hlthstack.io/. Report problems with the
+docs in this repository's issues, and security issues privately as described in
+[SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE)

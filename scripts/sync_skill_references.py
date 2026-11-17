@@ -14,8 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGET = ROOT / "skills" / "hlthstack-api" / "references"
-# Guides about the API. ai-skills.md is about installing this skill, not the API.
-SKIP = {"ai-skills.md"}
+# Guides about the API. ai-skills.md (installing this skill) and getting-started.md
+# (onboarding, links outside docs/) are not.
+SKIP = {"ai-skills.md", "getting-started.md"}
 
 
 def sources() -> dict[str, str]:

@@ -1,6 +1,6 @@
 {
   "name": "hlthstack",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Teaches Codex and ChatGPT the hlthstack health-benefits API: endpoints, auth, booking flows, webhooks and common pitfalls.",
   "author": {
     "name": "hlthstack",
@@ -8,6 +8,7 @@
   },
   "homepage": "https://github.com/hlthstack/integration-guide",
   "repository": "https://github.com/hlthstack/integration-guide",
+  "license": "MIT",
   "keywords": ["hlthstack", "health benefits", "api", "integration", "webhooks"],
   "interface": {
     "displayName": "hlthstack API",
