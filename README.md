@@ -8,7 +8,8 @@ and receive status updates by webhook.
 **New here?** Start with [Getting started](docs/getting-started.md).
 
 - **API reference:** https://developers.hlthstack.io
-- **Postman:** in Postman choose **Import** and paste the
+- **Postman docs:** https://documenter.getpostman.com/view/32733686/2sBYHbqvwh, with a **Run in Postman** button.
+- **Postman files:** in Postman choose **Import** and paste the
   [collection](https://developers.hlthstack.io/postman/hlthstack.postman_collection.json) link,
   then the [staging](https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json)
   or [production](https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json)

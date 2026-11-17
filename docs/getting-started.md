@@ -20,7 +20,8 @@ For staging you receive:
 
 Pick one:
 
-- **Postman:** in Postman choose **Import**, paste
+- **Postman:** open the [published Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbqvwh) and choose **Run in Postman**,
+  or in Postman choose **Import**, paste
   `https://developers.hlthstack.io/postman/hlthstack.postman_collection.json`, then import
   `https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json` the
   same way. Select the *hlthstack Staging* environment and fill in `username` and
