@@ -43,7 +43,11 @@ The API reference is at https://developers.hlthstack.io. See
 - [ePharmacy](epharmacy.md)
 - [Wallet](wallet.md)
 - [Pre-registration](pre-registration.md)
-- [Errors](errors.md)
+- [Errors](errors.md) and [common errors and how to fix them](common-errors.md)
+
+Also read [product communications](product-communications.md), so your app doesn't send
+members the same messages hlthstack already sends, and [white-labelling](white-labelling.md)
+if those messages should carry your brand.
 
 ## 4. Receive webhooks
 

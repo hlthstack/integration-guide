@@ -1,5 +1,7 @@
 # Pre-registration
 
+## 1. Overview
+
 Register your members (employees) and their dependants with hlthstack in bulk, update them,
 and deactivate them when they leave. Every write is processed asynchronously: the call
 returns a `request_id`, and `getPreRegistrationStatus` reports each row's outcome.
@@ -17,7 +19,99 @@ dependants, when they first sign in.
 The endpoints are served on the same hosts as the rest of the API
 (`https://api.hlthstack.io`, `https://staging-api.hlthstack.io`).
 
-## Authentication
+## 2. Onboarding checklist
+
+Ask hlthstack at onboarding for:
+
+- **Pre-registration credentials**: an account email and password issued for
+  pre-registration. They are separate from the booking API username and password.
+- **Your `company_id` values**: the company (or entity) each member belongs to.
+- **Plan ids**, if you enrol members in voluntary plans with `voluntary_plan_ids`.
+
+## 3. How it works
+
+1. Get a token with `getPreRegistrationAccessToken` (HTTP Basic auth) and send it in the
+   `X-EKINCARE-KEY` header. See [7.1](#authentication).
+2. Send a create, update or deactivate request. It is queued and returns a `request_id`.
+3. Poll `getPreRegistrationStatus` with that `request_id` until the request is `completed`
+   or `failed`. See [8. Checking the outcome](#8-checking-the-outcome).
+4. Fix the rows in `failure_records` and send only those rows in a new request.
+
+## 4. Operations and member types
+
+### Create, update, deactivate
+
+| Operation | Use it to | Body |
+|---|---|---|
+| `createPreRegistrations` | Register new members and dependants | `employees` and/or `dependants` arrays of full rows |
+| `updatePreRegistrations` | Change existing members and dependants | Same arrays; the identifier plus only the fields to change |
+| `deactivatePreRegistrations` | Remove members who leave | `employees` (emails) and/or `dependants` (mobile numbers) |
+
+To change or remove a registered member, use `updatePreRegistrations` or
+`deactivatePreRegistrations`, not create. `updatePreRegistrations` only changes dependants
+that already exist.
+
+### Employees and dependants
+
+- An employee is identified by `email`, or by `employee_code` within `company_id` when there
+  is no email.
+- A dependant is linked to its employee by `guardian_email` (the employee's email) or, for
+  employees without an email, by `company_id` + `guardian_employee_code`.
+- Employees are processed before dependants, so a dependant can refer to an employee in the
+  same request. If an employee has no dependants, leave `dependants` out or send `[]`.
+- To add a dependant to an employee registered earlier, send only `dependants`, linked by
+  `guardian_email` (or `company_id` + `guardian_employee_code`).
+- Plans are held by the employee and reach the family through it, so `voluntary_plan_ids`
+  is not accepted on dependants (see [7.2](#72-register-members-and-dependants)).
+- Deactivating an employee also deactivates all their dependants and cancels their ongoing
+  appointments.
+
+## 5. Conventions and common errors
+
+- Authenticate with the pre-registration token in `X-EKINCARE-KEY`, without a `Bearer`
+  prefix. The booking API's bearer token does not work here, and this token does not work on
+  the booking API. The `API-ENTITY-ID` / `API-SECRET-KEY` headers are not used here. Each row
+  names its company with `company_id` instead.
+- Dates in rows are `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099); plan `start_date` is
+  `DD-MM-YYYY` or `YYYY-MM-DD`. Enumerated values (`gender`, `vip`, `relation`) accept any
+  case.
+- Mobile numbers are 10 digits, no country code.
+- Errors about the call as a whole come back as an HTTP status. Errors about a single row come
+  back in the status response's `failure_records` (see
+  [Row errors you may see](#row-errors-you-may-see)).
+
+### Call errors
+
+| Status | Body | Cause |
+|---|---|---|
+| 400 | `{"message": "missing param or invalid params"}` | `employees`/`dependants` not a non-empty array, or no row has all the required keys |
+| 400 | `{"message": "Request is too large"}` | More than 250 rows |
+| 401 | empty | Missing, invalid or expired token, or contract ended |
+| 403 | empty | The account's role may not use this API |
+| 422 | `{"message": "something went wrong"}` | The request could not be queued; retry |
+
+## 6. Rules and limits
+
+- **At most 250 rows in total** per create or update request (`employees` + `dependants`),
+  and at most 250 entries in total per deactivate request.
+- **Every required key must be present in every create row**, even when the value is empty
+  (`""` or `null`). A row missing one of them is dropped silently: it is neither registered
+  nor listed in the status. If no row is left, the call fails with
+  `400 {"message": "missing param or invalid params"}`. On update, no key other than the
+  identifier is required.
+- The token is valid for **1 hour**, with no refresh token.
+- `employee_code` is unique within the company; `email` is unique; `dependent_code` is unique
+  per employee, case-insensitive.
+- The employee's email can't be changed on update.
+- Only members of companies your credentials can act on can be registered or deactivated.
+
+## 7. API reference
+
+<a id="authentication"></a>
+
+### 7.1 Get the access token (authentication)
+
+`GET /api/pre_registration/access-token`
 
 Pre-registration has **its own credentials**, separate from the booking API username and
 password: an account email and password that hlthstack issues for pre-registration. Ask for
@@ -54,9 +148,9 @@ not work on the booking API.
 - The `API-ENTITY-ID` / `API-SECRET-KEY` headers are not used here. Each row names its
   company with `company_id` instead.
 
-## Register members and dependants
+### 7.2 Register members and dependants
 
-`POST /v1/corporate/pre_registrations`
+`POST /v1/corporate/pre_registrations` (`createPreRegistrations`)
 
 ```bash
 curl -s -X POST "$BASE/v1/corporate/pre_registrations" \
@@ -93,7 +187,7 @@ that already exist.
 > listed in the status. If no row is left, the call fails with
 > `400 {"message": "missing param or invalid params"}`.
 
-### Employee fields
+#### Employee fields
 
 | Field | Key required | Notes |
 |---|---|---|
@@ -117,7 +211,7 @@ that already exist.
 An employee is identified by `email`, or by `employee_code` within `company_id` when there
 is no email.
 
-### Dependant fields
+#### Dependant fields
 
 | Field | Key required | Notes |
 |---|---|---|
@@ -138,7 +232,7 @@ is no email.
 reach the family through it. The dependant is still registered, but the row is reported as
 failed with `Voluntary plans can only be assigned to the primary member`.
 
-### Voluntary plans
+#### Voluntary plans
 
 `voluntary_plan_ids` is an array. Each entry is a plan id (shared at onboarding) or an
 object; the two forms can be mixed:
@@ -161,11 +255,11 @@ object; the two forms can be mixed:
 The resulting subscriptions are listed in the status (`customer_plans`) and by
 [`listCustomerPlans`](wallet.md#list-subscriptions).
 
-## Update members and dependants
+### 7.3 Update members and dependants
 
-`POST /v1/corporate/pre_registrations/update` takes the same `employees` / `dependants`
-arrays (at most 250 rows in total). Send the identifier and only the fields to change; no
-other key is required.
+`POST /v1/corporate/pre_registrations/update` (`updatePreRegistrations`) takes the same
+`employees` / `dependants` arrays (at most 250 rows in total). Send the identifier and only
+the fields to change; no other key is required.
 
 ```json
 {
@@ -198,9 +292,9 @@ On update, `mobile_number` is stored as the member's alternate mobile number and
 10 digits. `gender` must be `Male`, `Female` or `Non-binary` (any case). Other values are
 not format-checked on update.
 
-## Deactivate members or dependants
+### 7.4 Deactivate members or dependants
 
-`POST /v1/corporate/pre_registrations/deactivate`
+`POST /v1/corporate/pre_registrations/deactivate` (`deactivatePreRegistrations`)
 
 ```json
 { "employees": ["jane.doe@example.com"], "dependants": ["9999999997"] }
@@ -213,7 +307,15 @@ not format-checked on update.
 - Only members of companies your credentials can act on are deactivated; others are
   reported as not found.
 
-## Check the outcome
+### 7.5 Get the request status
+
+`GET /v1/corporate/pre_registrations/{request_id}/status` (`getPreRegistrationStatus`)
+
+Reports each row's outcome for a create, update or deactivate request. The response and how
+to read it are described in [8. Checking the outcome](#8-checking-the-outcome). Unknown
+`request_id`: `404 {"message": "Request couldn't find with the id provided"}`.
+
+## 8. Checking the outcome
 
 `GET /v1/corporate/pre_registrations/{request_id}/status`
 
@@ -246,10 +348,8 @@ not format-checked on update.
 }
 ```
 
-- `status` moves `initialized` -> `scheduled` -> `inprogress` -> `completed`. Records are
-  added while it is `inprogress`; poll (every few seconds, with backoff) until it is
-  `completed` or `failed`. `failed` means processing stopped part-way: rows already applied
-  are in `success_records`; resend the rest.
+- Records are added while the request is `inprogress`; poll (every few seconds, with
+  backoff) until it is `completed` or `failed`. See [9. Statuses](#9-statuses).
 - Larger requests take longer. If a request stays `inprogress` far longer than usual, send
   its `request_id` to hlthstack.
 - To retry, fix the rows in `failure_records` and send only those rows in a new request.
@@ -285,12 +385,34 @@ not format-checked on update.
 | `Multiple members match this mobile number - send api_customer_id or dependent_code` | Update: ambiguous mobile number |
 | `Failed to save record` | Unexpected failure for that row. Check the member before resending it |
 
-## Call errors
+## 9. Statuses
 
-| Status | Body | Cause |
+Request `status` moves `initialized` -> `scheduled` -> `inprogress` -> `completed`.
+
+| Status | Meaning |
+|---|---|
+| `initialized`, `scheduled` | Accepted and queued |
+| `inprogress` | Processing; records are added as rows are processed |
+| `completed` | Processing finished; read `success_records` and `failure_records` |
+| `failed` | Processing stopped part-way: rows already applied are in `success_records`; resend the rest |
+
+Deactivate success records carry a member `status` of `Active` or `Inactive`.
+
+## 10. Troubleshooting
+
+| Symptom | Cause | Fix |
 |---|---|---|
-| 400 | `{"message": "missing param or invalid params"}` | `employees`/`dependants` not a non-empty array, or no row has all the required keys |
-| 400 | `{"message": "Request is too large"}` | More than 250 rows |
-| 401 | empty | Missing, invalid or expired token, or contract ended |
-| 403 | empty | The account's role may not use this API |
-| 422 | `{"message": "something went wrong"}` | The request could not be queued; retry |
+| `401 {"message": "Wrong credentials"}` from the token call | Wrong or missing pre-registration credentials | Use the pre-registration account email and password, not the booking API credentials |
+| `401` with an empty body | Missing, invalid or expired token, a booking API bearer token, or your company's contract has ended | Request a new token (valid 1 hour) and send it in `X-EKINCARE-KEY` without `Bearer` |
+| `403` with an empty body | The account's role may not use this API | Contact hlthstack |
+| `400 {"message": "missing param or invalid params"}` | `employees`/`dependants` not a non-empty array, or no row has all the required keys | Send every required key in every row, even with an empty value |
+| A row is neither registered nor listed in the status | The row was missing a required key and was dropped silently | Add the missing key and resend that row |
+| `400 {"message": "Request is too large"}` | More than 250 rows | Split into requests of at most 250 rows |
+| `422 {"message": "something went wrong"}` | The request could not be queued | Retry |
+| Row fails with `provided company_id is not valid` | Missing `company_id`, or one your credentials can't act on | Use a `company_id` shared at onboarding |
+| Resent rows fail as duplicates (`Employee has already been taken`) | Rows that succeeded already exist | Resend only `failure_records`; use update or deactivate for registered members |
+| Dependant row fails with `Voluntary plans can only be assigned to the primary member` | `voluntary_plan_ids` sent on a dependant (the dependant is still registered) | Send plans on the employee |
+| Update fails with `Multiple members match this mobile number - send api_customer_id or dependent_code` | The dependant's `mobile_number` matches more than one dependant | Identify it by `api_customer_id` or `dependent_code` |
+| Status `failed` | Processing stopped part-way | Rows already applied are in `success_records`; resend the rest |
+| Request stays `inprogress` far longer than usual | Larger requests take longer | If it still doesn't finish, send its `request_id` to hlthstack |
+| `404 {"message": "Request couldn't find with the id provided"}` | Unknown `request_id` | Use the `request_id` returned by the write call |

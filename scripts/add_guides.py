@@ -34,6 +34,9 @@ EXTRA_SECTIONS = [
     ("Environments", "environments.md", "start"),
     ("Webhooks guide", "webhooks.md", "end"),
     ("Errors", "errors.md", "end"),
+    ("Common errors", "common-errors.md", "end"),
+    ("Product communications", "product-communications.md", "end"),
+    ("White-labelling", "white-labelling.md", "end"),
     ("FAQ", "faq.md", "end"),
 ]
 

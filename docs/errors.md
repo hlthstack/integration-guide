@@ -1,7 +1,8 @@
 # Errors
 
 Error bodies are not uniform across endpoints. Check the HTTP status first, then parse the
-body defensively. The shapes you will see:
+body defensively. For the errors partners hit most often and how to fix each, see
+[common errors](common-errors.md). The shapes you will see:
 
 | Shape | Example | Where |
 |---|---|---|

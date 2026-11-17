@@ -112,6 +112,9 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 - [Pre-registration](docs/pre-registration.md): register, update and deactivate members
 - [Webhooks](docs/webhooks.md)
 - [Errors](docs/errors.md)
+- [Common errors and how to fix them](docs/common-errors.md)
+- [Product communications](docs/product-communications.md): what members receive, and when
+- [White-labelling](docs/white-labelling.md): send member communications under your brand
 - [Testing on staging](docs/testing.md)
 - [FAQ](docs/faq.md)
 - [AI coding assistant skills](docs/ai-skills.md): install and run the skill in Claude Code, Codex and ChatGPT
