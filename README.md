@@ -102,22 +102,59 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 
 ## Guides
 
-- [Getting started](docs/getting-started.md): from access request to go-live
-- [Authentication](docs/authentication.md)
-- [Environments](docs/environments.md)
-- [Health checkups and lab tests](docs/health-checkups.md)
-- [Consultations](docs/consultations.md)
-- [ePharmacy](docs/epharmacy.md)
-- [Wallet](docs/wallet.md)
-- [Pre-registration](docs/pre-registration.md): register, update and deactivate members
-- [Webhooks](docs/webhooks.md)
-- [Errors](docs/errors.md)
-- [Common errors and how to fix them](docs/common-errors.md)
-- [Product communications](docs/product-communications.md): what members receive, and when
-- [White-labelling](docs/white-labelling.md): send member communications under your brand
-- [Testing on staging](docs/testing.md)
-- [FAQ](docs/faq.md)
-- [AI coding assistant skills](docs/ai-skills.md): install and run the skill in Claude Code, Codex and ChatGPT
+The service guides (health checkups, consultations, ePharmacy, pre-registration) share one
+layout, so you always know where to look: **1. Overview**, **2. Onboarding checklist**,
+**3. How it works**, **4. Types**, **5. Conventions and common errors**, **6. Rules and time
+windows**, **7. API reference** (one entry per endpoint, with its parameters, response and
+errors), **8. Webhooks**, **9. Statuses** and **10. Troubleshooting**. The same guides open
+each section of the [API reference](https://developers.hlthstack.io) and each folder of the
+[Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt).
+
+### Start here
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [Getting started](docs/getting-started.md) | The path from requesting access to going live: what you receive at onboarding, first calls on staging (Postman, curl or an SDK), building flows, webhooks, testing and the go-live checklist. | You are new to hlthstack, or planning an integration. |
+| [Authentication](docs/authentication.md) | Exchanging your username and password for a 1-hour access token, sending it on every call, the extra headers for partners serving several employers (entities), and keeping credentials safe. | Before your first call. |
+| [Environments](docs/environments.md) | Staging and production addresses, which credentials and ids differ between them, and recommended client timeouts. | Setting up configuration, and again before go-live. |
+
+### Book and manage services
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [Health checkups and lab tests](docs/health-checkups.md) | Finding providers near a member, reading slots, booking at a centre or with home sample collection for one or several members, rescheduling and cancelling, and downloading the voucher, reports and lab results. Covers booking hours, notice periods, cut-offs, co-pay links and every appointment status. | You offer health checkups, lab tests, dental, vision or vaccinations. |
+| [Consultations](docs/consultations.md) | The three consultation types (in-clinic, scheduled online by audio or video, and priority online, where a doctor calls within about 4 hours), booking, reschedule and cancel rules, refunds, uploading reports for the doctor, and the summary and prescription after the call. | You offer doctor consultations. |
+| [ePharmacy](docs/epharmacy.md) | Searching medicines, digitizing a prescription, building the cart, choosing home delivery or store pickup, and creating the order. Covers the three payment flows (covered by the wallet, a payment link for the member, or collected by you), substitutions, split orders and every order status. | You offer medicine orders. |
+| [Wallet and subscriptions](docs/wallet.md) | Reading a member's benefit balances and plan subscriptions, and choosing which subscription pays for a booking. | You show members their benefits, or members have more than one plan. |
+| [Pre-registration](docs/pre-registration.md) | Registering employees and their dependants in bulk (up to 250 rows a request), updating and deactivating them, with its own login and token. Each request returns a `request_id`; poll its status for each row's outcome, and resend only the failed rows. | You load members before they first sign in. |
+
+### Follow what happens
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [Webhooks](docs/webhooks.md) | Verifying each delivery's signature (with Node.js and Python code), delivery timeouts and retries, ordering and duplicates, and the payloads for appointments, consultations, lab results, pharmacy orders and prescription digitization. | Before you build your webhook endpoint. |
+| [Product communications](docs/product-communications.md) | The emails, WhatsApp, SMS, in-app and push messages hlthstack sends your members for pharmacy, vision and consultations: which message, on which channel, and when. | Designing your own notifications, so members don't get the same message twice. |
+| [White-labelling](docs/white-labelling.md) | Sending those messages under your app name, sender name and logo, by email only or by email, WhatsApp and SMS, and how to set it up. | Members should see your brand rather than hlthstack's. |
+
+### Handle errors
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [Common errors and how to fix them](docs/common-errors.md) | The errors partners hit most often, grouped by sign-in, packages and providers, slots, booking, reschedule and cancel, and results: why each happens and what to change. | A call fails and you want the fix. |
+| [Errors](docs/errors.md) | Every error body shape and status code the API returns, the common messages, and which errors are safe to retry. | Writing your error handling. |
+| [FAQ](docs/faq.md) | Short answers on tokens, entities, booking vs appointment ids, reschedule and cancel cut-offs, webhooks, pre-registration, timeouts and rate limits. | You have a quick question. |
+
+### Test and go live
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [Testing on staging](docs/testing.md) | Staging-only endpoints that move a booking, consultation or pharmacy order through each status and fire the real webhooks, plus a checklist of what to test. | Testing end to end before go-live. |
+
+### Tools
+
+| Guide | What it covers | Read it when |
+|---|---|---|
+| [AI coding assistant skills](docs/ai-skills.md) | Installing the hlthstack skill in Claude Code, Codex or ChatGPT, so the assistant knows the API, flows and webhooks; example prompts and safety notes. | Your developers use an AI coding assistant. |
 
 ## Support
 
