@@ -1,5 +1,10 @@
 # hlthstack integration guide
 
+[![Latest release](https://img.shields.io/github/v/release/hlthstack/integration-guide)](https://github.com/hlthstack/integration-guide/releases)
+[![License: MIT](https://img.shields.io/github/license/hlthstack/integration-guide)](LICENSE)
+[![API reference](https://img.shields.io/badge/docs-developers.hlthstack.io-blue)](https://developers.hlthstack.io)
+[![OpenAPI 1.0.2](https://img.shields.io/badge/OpenAPI-1.0.2-6BA539)](openapi/openapi.yaml)
+
 hlthstack is a health-benefits API for partners. Through it you can book health checkups
 and lab tests, in-clinic and online doctor consultations, and ePharmacy orders for your
 members, check their benefit wallets, register your members and their dependants in bulk,
@@ -7,15 +12,39 @@ and receive status updates by webhook.
 
 **New here?** Start with [Getting started](docs/getting-started.md).
 
-- **API reference:** https://developers.hlthstack.io
-- **Postman docs:** https://documenter.getpostman.com/view/32733686/2sBYHbrFjt, with a **Run in Postman** button.
-- **Postman files:** in Postman choose **Import** and paste the
-  [collection](https://developers.hlthstack.io/postman/hlthstack.postman_collection.json) link,
-  then the [staging](https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json)
-  or [production](https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json)
-  environment link.
-- **OpenAPI spec:** [`openapi/openapi.yaml`](openapi/openapi.yaml), version 1.0.2.
-- **Changes:** [CHANGELOG.md](CHANGELOG.md).
+## Start here
+
+| Read the guides | Try in Postman | Use an SDK |
+|---|---|---|
+| [Getting started](docs/getting-started.md), the [guides](#guides) below and the [API reference](https://developers.hlthstack.io). | The [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with a **Run in Postman** button, or [import the files](#resources). | [JavaScript](https://github.com/hlthstack/js) · [Python](https://github.com/hlthstack/python) · [Java](https://github.com/hlthstack/java). See [Install an SDK](#install-an-sdk). |
+
+### Resources
+
+| Resource | Where |
+|---|---|
+| API reference | https://developers.hlthstack.io |
+| Postman docs | https://documenter.getpostman.com/view/32733686/2sBYHbrFjt, with a **Run in Postman** button |
+| Postman files | In Postman choose **Import** and paste the [collection](https://developers.hlthstack.io/postman/hlthstack.postman_collection.json) link, then the [staging](https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json) or [production](https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json) environment link. |
+| OpenAPI spec | [`openapi/openapi.yaml`](openapi/openapi.yaml), version 1.0.2 |
+| Changes | [CHANGELOG.md](CHANGELOG.md) |
+
+## How an integration fits together
+
+```mermaid
+flowchart LR
+    subgraph partner["Your side"]
+        BE["Your backend"]
+        WH["Your webhook endpoint"]
+        APP["Your app or website"]
+    end
+    BE -- "access token, then REST calls" --> API["hlthstack API"]
+    API -- "signed status webhooks" --> WH
+    APP -- "embed (SSO or SAML 2.0)" --> PWA["hlthstack PWA"]
+```
+
+Your backend calls the REST API with a short-lived access token; hlthstack sends status
+updates to your webhook endpoint. If you'd rather not build screens, embed the hlthstack
+member experience (the PWA) in your app or site instead, or alongside the API.
 
 ## Ways to integrate
 
@@ -29,6 +58,8 @@ and receive status updates by webhook.
 | AI assistant skills | A skill and plugin that teach Claude Code, Codex and ChatGPT to use this API | This repo: [`skills/`](skills/), install guide in [docs/ai-skills.md](docs/ai-skills.md) |
 
 ### Install an SDK
+
+Install the JavaScript or Python SDK straight from GitHub:
 
 ```bash
 npm install github:hlthstack/js#v1.0.2                            # JavaScript / TypeScript
@@ -46,22 +77,32 @@ Java: add the JitPack repository and depend on `com.github.hlthstack:java:v1.0.2
 | Staging | `https://staging-api.hlthstack.io` |
 
 These hosts serve paths under `/api/` and the pre-registration paths under
-`/v1/corporate/pre_registrations`. Staging has separate credentials and extra endpoints for
-simulating status changes. See [docs/environments.md](docs/environments.md).
+`/v1/corporate/pre_registrations`. See [docs/environments.md](docs/environments.md).
+
+> [!TIP]
+> Make your first calls on staging. Staging has separate credentials and extra endpoints for
+> simulating status changes, so you can test every flow before go-live.
 
 ## Getting credentials
 
 Contact hlthstack through https://www.hlthstack.io/. At onboarding you receive:
 
-- an API username and password (per environment),
-- if you use pre-registration, a separate pre-registration login (email and password) and
-  your company ids,
-- your package ids and plan ids,
-- your company slug (for the wallet endpoints),
-- for multi-entity partners, entity ids and an API secret key,
-- a webhook signing secret, once you register your webhook URLs.
+| What you receive | When |
+|---|---|
+| An API username and password | Always, per environment |
+| A separate pre-registration login (email and password) and your company ids | If you use pre-registration |
+| Your package ids and plan ids | Always |
+| Your company slug | For the wallet endpoints |
+| Entity ids and an API secret key | For multi-entity partners |
+| A webhook signing secret | Once you register your webhook URLs |
+
+> [!CAUTION]
+> Keep these credentials on your server. Never ship them in a mobile app or browser code. See
+> [SECURITY.md](SECURITY.md#handling-your-credentials).
 
 ## Quickstart
+
+Book a health checkup on staging with curl, from token to booking:
 
 ```bash
 BASE=https://staging-api.hlthstack.io
@@ -102,13 +143,24 @@ Then listen for webhooks to follow the appointment to `confirmed`, `completed` a
 
 ## Guides
 
-The service guides (health checkups, consultations, ePharmacy, pre-registration) share one
-layout, so you always know where to look: **1. Overview**, **2. Onboarding checklist**,
-**3. How it works**, **4. Types**, **5. Conventions and common errors**, **6. Rules and time
-windows**, **7. API reference** (one entry per endpoint, with its parameters, response and
-errors), **8. Webhooks**, **9. Statuses** and **10. Troubleshooting**. The same guides open
-each section of the [API reference](https://developers.hlthstack.io) and each folder of the
-[Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt).
+The same guides open each section of the [API reference](https://developers.hlthstack.io)
+and each folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt).
+
+<details>
+<summary>The service guides (health checkups, consultations, ePharmacy, pre-registration) share one layout, so you always know where to look.</summary>
+
+1. **Overview**
+2. **Onboarding checklist**
+3. **How it works**
+4. **Types**
+5. **Conventions and common errors**
+6. **Rules and time windows**
+7. **API reference** (one entry per endpoint, with its parameters, response and errors)
+8. **Webhooks**
+9. **Statuses**
+10. **Troubleshooting**
+
+</details>
 
 ### Start here
 
@@ -158,9 +210,11 @@ each section of the [API reference](https://developers.hlthstack.io) and each fo
 
 ## Support
 
-Contact your hlthstack account contact or https://www.hlthstack.io/. Report problems with the
-docs in this repository's issues, and security issues privately as described in
-[SECURITY.md](SECURITY.md).
+| For | Where |
+|---|---|
+| Questions and access | Your hlthstack account contact, or https://www.hlthstack.io/ |
+| Problems with the docs | This repository's issues |
+| Security issues | Privately, as described in [SECURITY.md](SECURITY.md) |
 
 ## License
 

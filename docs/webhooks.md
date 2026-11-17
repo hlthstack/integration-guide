@@ -1,7 +1,14 @@
 # Webhooks
 
-hlthstack POSTs JSON to URLs you register at onboarding. Payload schemas are under
-`webhooks` in [`openapi.yaml`](../openapi/openapi.yaml).
+hlthstack POSTs JSON to URLs you register at onboarding, so you learn about status changes
+without polling. Payload schemas are under `webhooks` in [`openapi.yaml`](../openapi/openapi.yaml).
+
+**On this page:** [Authentication](#authentication) · [Delivery and retries](#delivery-and-retries) ·
+[Appointment and consultation payload](#appointment-and-consultation-payload) ·
+[Lab results payload](#lab-results-payload) · [Pharmacy payloads](#pharmacy-payloads) ·
+[Digitization results payload](#digitization-results-payload)
+
+## At a glance
 
 | Endpoint you register | Events (`type` in the body) |
 |---|---|
@@ -9,12 +16,24 @@ hlthstack POSTs JSON to URLs you register at onboarding. Payload schemas are und
 | Lab results (on request) | `lab_results` |
 | Digitization results | `digitization_results` (prescription digitization finished) |
 
-Appointment and pharmacy events share the status-updates URL. Tell them apart by the body:
-appointment payloads have `appointment_id`; pharmacy payloads have `order_id` and
-`service_type: "pharmacy"`.
+| `type` | Triggered by | Payload |
+|---|---|---|
+| `status_update` (appointments, consultations) | Every appointment status change | [Appointment and consultation payload](#appointment-and-consultation-payload) |
+| `reports_upload` | Status `partially_received`/`received` with report links | [Appointment and consultation payload](#appointment-and-consultation-payload) |
+| `lab_results` | Lab results available (only if a lab-results URL is registered) | [Lab results payload](#lab-results-payload) |
+| `status_update` (pharmacy) | Every order status change, including refunds | [Pharmacy payloads](#pharmacy-payloads) |
+| `additional_payment_required` | Partner-collected order needs more than you collected | [`additional_payment_required`](#additional_payment_required-partner-collected) |
+| `post_billing` | Every order in a partner-collected order tree reached a final status | [`post_billing`](#post_billing-partner-collected) |
+| `digitization_results` | Prescription digitization finished | [Digitization results payload](#digitization-results-payload) |
 
-You also receive webhooks for bookings hlthstack's team makes on a member's behalf. In
-those, `api_customer_id` is `null`.
+Appointment and pharmacy events share the status-updates URL. Tell them apart by the body:
+
+- appointment payloads have `appointment_id`;
+- pharmacy payloads have `order_id` and `service_type: "pharmacy"`.
+
+> [!NOTE]
+> You also receive webhooks for bookings hlthstack's team makes on a member's behalf. In
+> those, `api_customer_id` is `null`.
 
 ## Authentication
 
@@ -38,8 +57,11 @@ JWT claims by event:
 | Pharmacy | `order_id`, `timestamp`, `webhook_type` (`status_update`, `additional_payment_required` or `post_billing`, matching the body's `type`) |
 | Prescription digitization | `request_id`, `timestamp`, `webhook_type: "digitization_results"` |
 
-`timestamp` is Unix seconds at send time. The JWT has no `exp` claim and does **not** cover
-the body, so verify all of the following:
+`timestamp` is Unix seconds at send time.
+
+> [!CAUTION]
+> The JWT has no `exp` claim and does **not** cover the body. Checking the signature alone is
+> not enough: verify all three checks below on every delivery.
 
 1. The signature is valid for your secret (HS256 only).
 2. The ids in the claims match the ids in the body.
@@ -47,6 +69,8 @@ the body, so verify all of the following:
    replays.
 
 ### Node.js
+
+Verify the signature, claims and timestamp with Express and `jsonwebtoken`:
 
 ```js
 // npm install jsonwebtoken express
@@ -87,6 +111,8 @@ app.post("/hlthstack/webhooks", (req, res) => {
 
 ### Python
 
+The same checks with Flask and PyJWT:
+
 ```python
 # pip install pyjwt flask
 import os, time, jwt
@@ -123,23 +149,30 @@ def webhook():
 
 ## Delivery and retries
 
-- Timeout: 30 seconds per attempt. Reply 2xx quickly and process asynchronously.
-- Retried up to 5 times (about 24 minutes; backoff 12 s, 36 s, 108 s, 324 s, 972 s) on
-  connection refused/reset, TLS errors, timeouts, and HTTP 408, 502, 503, 504.
-- **Not retried**: every other non-2xx, including 400, 401, 403, 404, 422, 429 and 500. If your
-  endpoint rejected or missed events, reconcile with the GET endpoints.
+> [!IMPORTANT]
+> Each attempt times out after 30 seconds. Reply 2xx quickly and process asynchronously.
+
+| Situation | What happens |
+|---|---|
+| Connection refused/reset, TLS errors, timeouts, HTTP 408, 502, 503, 504 | Retried up to 5 times (about 24 minutes; backoff 12 s, 36 s, 108 s, 324 s, 972 s) |
+| Every other non-2xx, including 400, 401, 403, 404, 422, 429 and 500 | **Not retried**. If your endpoint rejected or missed events, reconcile with the GET endpoints |
+
 - If your endpoint has a temporary problem, return `503` (retried) rather than `500` (final).
 - Every attempt is logged on hlthstack's side; ask for a delivery report if you suspect gaps.
-- Ordering is not guaranteed. Each body is a full snapshot of the current state, so apply the
-  latest one, use the JWT `timestamp` (and `event_timestamp` on appointments) to drop older
-  events, and use `getAppointment` / `getOrder` as the source of truth.
-- Because appointment payloads are rebuilt from the current state on each attempt, keys such
-  as `voucher_api_url` or `reports` reflect the appointment now, which can be ahead of
-  `status`.
+
+> [!WARNING]
+> Ordering is not guaranteed. Each body is a full snapshot of the current state, so apply the
+> latest one, use the JWT `timestamp` (and `event_timestamp` on appointments) to drop older
+> events, and use `getAppointment` / `getOrder` as the source of truth.
+
+Because appointment payloads are rebuilt from the current state on each attempt, keys such
+as `voucher_api_url` or `reports` reflect the appointment now, which can be ahead of
+`status`.
 
 ## Appointment and consultation payload
 
-One shape for every status change; extra keys appear depending on the state.
+One shape for every status change; extra keys appear depending on the state. A confirmed
+health checkup:
 
 ```json
 {
@@ -191,12 +224,18 @@ One shape for every status change; extra keys appear depending on the state.
 | `meeting_link` | Video consultations (`null` until the doctor confirms) |
 | `payment` | A payment exists |
 
-For statuses see [health-checkups.md](health-checkups.md#appointment-statuses) and
+Consultations send no webhook while waiting for the member's co-pay (`payment_pending`).
+
+**See also:** statuses in [health-checkups.md](health-checkups.md#appointment-statuses) and
 [consultations.md](consultations.md#consultation-statuses) (which also lists the typical
-consultation sequences). Consultations send no webhook while waiting for the member's
-co-pay (`payment_pending`).
+consultation sequences).
 
 ## Lab results payload
+
+> [!NOTE]
+> Not sent by default; ask hlthstack to register a lab-results URL.
+
+Digitized results for one appointment:
 
 ```json
 {
@@ -218,11 +257,10 @@ co-pay (`payment_pending`).
 }
 ```
 
-Not sent by default; ask hlthstack to register a lab-results URL.
-
 ## Pharmacy payloads
 
-`status_update` fires on every order status change, including refunds:
+`status_update` fires on every order status change, including refunds. An order out for
+delivery:
 
 ```json
 {
@@ -273,21 +311,26 @@ Not sent by default; ask hlthstack to register a lab-results URL.
 }
 ```
 
-- `address`, `city`, `pincode`, `state` are present when the order has an address;
-  `payment` when a payment exists.
-- `shipment_details.delivery_type` is `store_pickup`, `express`, `standard` or `null`;
-  `store_details` is set only for store pickup.
-- Partner-collected orders add `sub_total`, `additional_charge`, `total_payable`,
-  `order_items[].selling_price` / `discounted_price`, and in `payment`: `partner_collected`,
-  `partner_collected_amount`, `additional_collected_amount`, `partner_payment_reference`.
-- Pharmacy payloads have no `booking_source`.
+| Key | Present when / values |
+|---|---|
+| `address`, `city`, `pincode`, `state` | The order has an address |
+| `payment` | A payment exists |
+| `shipment_details.delivery_type` | `store_pickup`, `express`, `standard` or `null` |
+| `shipment_details.store_details` | Set only for store pickup |
+| `sub_total`, `additional_charge`, `total_payable`, `order_items[].selling_price` / `discounted_price` | Partner-collected orders |
+| In `payment`: `partner_collected`, `partner_collected_amount`, `additional_collected_amount`, `partner_payment_reference` | Partner-collected orders |
+| `booking_source` | Never: pharmacy payloads have no `booking_source` |
 
 ### `additional_payment_required` (partner-collected)
 
-The pharmacy needs more than you collected (typically a pricier substitute). Collect
-`additional_payment.amount_payable` from the member. `additional_payment.order_id` is the
-pharmacy's reference (it may be a split child); the top-level `order_id` is the hlthstack
-order. Sent again only when the amount changes.
+The pharmacy needs more than you collected (typically a pricier substitute).
+
+- Collect `additional_payment.amount_payable` from the member.
+- `additional_payment.order_id` is the pharmacy's reference (it may be a split child); the
+  top-level `order_id` is the hlthstack order.
+- Sent again only when the amount changes.
+
+The `additional_payment` block (plus the same envelope keys as `status_update`):
 
 ```json
 {
@@ -300,15 +343,19 @@ order. Sent again only when the amount changes.
 }
 ```
 
-(Plus the same envelope keys as `status_update`.)
-
 ### `post_billing` (partner-collected)
 
-Sent as soon as every order in the tree reaches a final status. `adjustment_amount =
-total_collected_amount - final_amount` is what you owe the member back; `final_amount` is
-authoritative (it accounts for cancellations, returns, price changes and pro-rata shipping).
-Always apply the latest `post_billing` for an order, and reconcile refunds against
-`adjustment_amount`, never `payment.refunded_amount`.
+Sent as soon as every order in the tree reaches a final status.
+
+- `adjustment_amount = total_collected_amount - final_amount` is what you owe the member back;
+  `final_amount` is authoritative (it accounts for cancellations, returns, price changes and
+  pro-rata shipping).
+
+> [!IMPORTANT]
+> Always apply the latest `post_billing` for an order, and reconcile refunds against
+> `adjustment_amount`, never `payment.refunded_amount`.
+
+The `settlement` block:
 
 ```json
 {
@@ -334,6 +381,8 @@ are delivered, `post_billing` arrives with `final_amount` 900 and `adjustment_am
 refund 300 to the member.
 
 ## Digitization results payload
+
+Sent when prescription digitization finishes:
 
 ```json
 {

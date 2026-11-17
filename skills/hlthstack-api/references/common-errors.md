@@ -5,13 +5,21 @@
 The errors partners run into most often, why they happen, and what to do. For every error
 shape and status code, see [errors.md](errors.md).
 
-**Before contacting support:** a 4xx error returns the same result until the request
-changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the request
-(without the token) and the full response.
+**On this page:** [1. Sign-in and access](#1-sign-in-and-access) ·
+[2. Packages and providers](#2-packages-and-providers) ·
+[3. Slots and booking times](#3-slots-and-booking-times) ·
+[4. Creating a booking](#4-creating-a-booking) ·
+[5. Reschedule and cancel](#5-reschedule-and-cancel) ·
+[6. Results, reports and vouchers](#6-results-reports-and-vouchers)
+
+> [!TIP]
+> **Before contacting support:** a 4xx error returns the same result until the request
+> changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the request
+> (without the token) and the full response.
 
 ## 1. Sign-in and access
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 401 `HTTP Token: Access denied.` | The access token is missing, malformed or expired. | Get a new token and retry once. Refresh the token before it expires instead of waiting for a 401. |
 | 401 `Wrong credentials` | The API username or password is wrong, or belongs to the other environment. | Use the credentials issued for that environment. Staging credentials don't work in production. |
@@ -21,7 +29,7 @@ changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the
 
 ## 2. Packages and providers
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 400 `invalid package_ids` · `Invalid package ids: <id> (package not found)` | The package id doesn't exist for your account. | Use only the package ids shared at onboarding. |
 | 400 `Invalid package ids: <id> (not tagged to <benefit> benefit)` | The package is valid but doesn't belong to the service you are calling. | Send each package id only with the service it was issued for. |
@@ -34,7 +42,7 @@ changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the
 
 ## 3. Slots and booking times
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 400 `Booking date <date> is before the provider's earliest available date <date>` | The provider needs advance notice, so the date you asked for is too soon. | Start from the earliest date in the message, and show only the dates the slots call returns. |
 | 400 or 500 `invalid appointment time` · `invalid appointment date` | The date-time is in the wrong format, in the past, or missing its time zone. | Send ISO 8601 with a time zone offset, and only future times. |
@@ -45,7 +53,7 @@ changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the
 
 ## 4. Creating a booking
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 400 with `provider_id`, `appointment_date_time`, `customers` and `address` all `can't be blank` | The request arrived with an empty body. | Send JSON with `Content-Type: application/json` and the fields at the top level. If you monitor the API, don't use the booking endpoint as a health check. |
 | 400 `provider_id: is not a number, invalid id` | The provider id is wrong or sent as text. | Send the numeric provider id from the provider list. |
@@ -60,7 +68,7 @@ changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the
 
 ## 5. Reschedule and cancel
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 400 `invalid booking_id` · `invalid appointment_id` | The id is in the wrong format, the wrong kind of id, or from the other environment. | Store the id returned at booking and send it unchanged. |
 | 403 `invalid appointment_id` | The id is well-formed but isn't a booking under your account. | Check you are using the right environment and account. |
@@ -71,7 +79,7 @@ changes, so don't retry it in a loop. Send hlthstack the endpoint, the time, the
 
 ## 6. Results, reports and vouchers
 
-| Error | Why it happens | Solution |
+| Error | Cause | Fix |
 |---|---|---|
 | 400 `Digitized lab results will be available once they are verified` | The results aren't verified yet. | Wait for the results webhook instead of polling. |
 | 400 `Reports unavailable` | The report hasn't been uploaded yet. | Wait for the reports webhook, then download. |

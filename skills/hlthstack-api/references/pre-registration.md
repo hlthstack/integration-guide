@@ -9,6 +9,19 @@
 - **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#pre-registration) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#pre-registration) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#pre-registration).
 - **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#pre-registration) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#pre-registration) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#pre-registration).
 
+**On this page**
+
+1. [Overview](#1-overview)
+2. [Onboarding checklist](#2-onboarding-checklist)
+3. [How it works](#3-how-it-works)
+4. [Operations and member types](#4-operations-and-member-types)
+5. [Conventions and common errors](#5-conventions-and-common-errors)
+6. [Rules and limits](#6-rules-and-limits)
+7. [API reference](#7-api-reference)
+8. [Checking the outcome](#8-checking-the-outcome)
+9. [Statuses](#9-statuses)
+10. [Troubleshooting](#10-troubleshooting)
+
 ## 1. Overview
 
 Register your members (employees) and their dependants with hlthstack in bulk, update them,
@@ -77,17 +90,18 @@ that already exist.
 
 ## 5. Conventions and common errors
 
-- Authenticate with the pre-registration token in `X-EKINCARE-KEY`, without a `Bearer`
-  prefix. The booking API's bearer token does not work here, and this token does not work on
-  the booking API. The `API-ENTITY-ID` / `API-SECRET-KEY` headers are not used here. Each row
-  names its company with `company_id` instead.
-- Dates in rows are `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099); plan `start_date` is
-  `DD-MM-YYYY` or `YYYY-MM-DD`. Enumerated values (`gender`, `vip`, `relation`) accept any
-  case.
-- Mobile numbers are 10 digits, no country code.
-- Errors about the call as a whole come back as an HTTP status. Errors about a single row come
-  back in the status response's `failure_records` (see
-  [Row errors you may see](#row-errors-you-may-see)).
+> [!IMPORTANT]
+> Authenticate with the pre-registration token in `X-EKINCARE-KEY`, without a `Bearer`
+> prefix. The booking API's bearer token does not work here, and this token does not work on
+> the booking API.
+
+| Topic | Convention |
+|---|---|
+| Headers | The `API-ENTITY-ID` / `API-SECRET-KEY` headers are not used here. Each row names its company with `company_id` instead. |
+| Dates | Dates in rows are `DD-MM-YYYY` or `DD/MM/YYYY` (years 1900-2099); plan `start_date` is `DD-MM-YYYY` or `YYYY-MM-DD`. |
+| Enumerated values | `gender`, `vip`, `relation` accept any case. |
+| Mobile numbers | 10 digits, no country code. |
+| Errors | Errors about the call as a whole come back as an HTTP status. Errors about a single row come back in the status response's `failure_records` (see [Row errors you may see](#row-errors-you-may-see)). |
 
 ### Call errors
 
@@ -103,11 +117,9 @@ that already exist.
 
 - **At most 250 rows in total** per create or update request (`employees` + `dependants`),
   and at most 250 entries in total per deactivate request.
-- **Every required key must be present in every create row**, even when the value is empty
-  (`""` or `null`). A row missing one of them is dropped silently: it is neither registered
-  nor listed in the status. If no row is left, the call fails with
-  `400 {"message": "missing param or invalid params"}`. On update, no key other than the
-  identifier is required.
+- **Every required key must be present in every create row** (see the warning in
+  [7.2](#72-register-members-and-dependants)). On update, no key other than the identifier
+  is required.
 - The token is valid for **1 hour**, with no refresh token.
 - `employee_code` is unique within the company; `email` is unique; `dependent_code` is unique
   per employee, case-insensitive.
@@ -116,9 +128,19 @@ that already exist.
 
 ## 7. API reference
 
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/pre_registration/access-token` | [Get the access token](#71-get-the-access-token-authentication) (`getPreRegistrationAccessToken`) |
+| `POST` | `/v1/corporate/pre_registrations` | [Register members and dependants](#72-register-members-and-dependants) (`createPreRegistrations`) |
+| `POST` | `/v1/corporate/pre_registrations/update` | [Update members and dependants](#73-update-members-and-dependants) (`updatePreRegistrations`) |
+| `POST` | `/v1/corporate/pre_registrations/deactivate` | [Deactivate members or dependants](#74-deactivate-members-or-dependants) (`deactivatePreRegistrations`) |
+| `GET` | `/v1/corporate/pre_registrations/{request_id}/status` | [Get the request status](#75-get-the-request-status) (`getPreRegistrationStatus`) |
+
 <a id="authentication"></a>
 
 ### 7.1 Get the access token (authentication)
+
+Exchange the pre-registration credentials for a short-lived token.
 
 `GET /api/pre_registration/access-token`
 
@@ -128,7 +150,7 @@ them at onboarding. The booking API's bearer token does not work here, and this 
 not work on the booking API.
 
 1. `GET /api/pre_registration/access-token` with HTTP Basic auth (the account email as the
-   username):
+   username). Request and response:
 
    ```bash
    curl -u "$HS_PREREG_USERNAME:$HS_PREREG_PASSWORD" \
@@ -139,27 +161,35 @@ not work on the booking API.
    { "access_token": "YOUR_PRE_REGISTRATION_TOKEN", "expires_at": "2026-01-15 07:16:21 UTC" }
    ```
 
-   Wrong or missing credentials: `401 {"message": "Wrong credentials"}`.
-
 2. Send the token, without a `Bearer` prefix, in the `X-EKINCARE-KEY` header:
 
-   ```
+   ```http
    X-EKINCARE-KEY: YOUR_PRE_REGISTRATION_TOKEN
    ```
 
-- The token is valid for **1 hour**. `expires_at` is UTC but formatted
-  `YYYY-MM-DD HH:MM:SS UTC`, not ISO 8601. There is no refresh token: request a new one
-  before it expires. Cache the token and reuse it across requests until shortly before
-  `expires_at`; don't request one per call.
-- A missing, invalid or expired token returns `401` with an **empty body**. So does any token
-  once your company's contract has ended.
-- `403` with an empty body means the account's role may not use this API. Contact hlthstack.
+> [!IMPORTANT]
+> The token is valid for **1 hour**. There is no refresh token: request a new one before it
+> expires. Cache the token and reuse it across requests until shortly before `expires_at`;
+> don't request one per call.
+
+- `expires_at` is UTC but formatted `YYYY-MM-DD HH:MM:SS UTC`, not ISO 8601.
 - The `API-ENTITY-ID` / `API-SECRET-KEY` headers are not used here. Each row names its
   company with `company_id` instead.
 
+Errors:
+
+| Status | Body | Cause |
+|---|---|---|
+| `401` | `{"message": "Wrong credentials"}` | Token call: wrong or missing credentials |
+| `401` | **empty body** | A missing, invalid or expired token, or any token once your company's contract has ended |
+| `403` | empty body | The account's role may not use this API. Contact hlthstack |
+
 ### 7.2 Register members and dependants
 
-`POST /v1/corporate/pre_registrations` (`createPreRegistrations`)
+Register new employees and their dependants in one queued request.
+
+`POST /v1/corporate/pre_registrations` (`createPreRegistrations`). Example request and
+response:
 
 ```bash
 curl -s -X POST "$BASE/v1/corporate/pre_registrations" \
@@ -191,6 +221,7 @@ an employee registered earlier, send only `dependants`, linked by `guardian_emai
 `company_id` + `guardian_employee_code`); `updatePreRegistrations` only changes dependants
 that already exist.
 
+> [!WARNING]
 > **Every required key must be present in every row**, even when the value is empty (`""`
 > or `null`). A row missing one of them is dropped silently: it is neither registered nor
 > listed in the status. If no row is left, the call fails with
@@ -244,7 +275,7 @@ failed with `Voluntary plans can only be assigned to the primary member`.
 #### Voluntary plans
 
 `voluntary_plan_ids` is an array. Each entry is a plan id (shared at onboarding) or an
-object; the two forms can be mixed:
+object; the two forms can be mixed. For example:
 
 ```json
 "voluntary_plan_ids": [
@@ -266,9 +297,11 @@ The resulting subscriptions are listed in the status (`customer_plans`) and by
 
 ### 7.3 Update members and dependants
 
+Change fields on members and dependants that are already registered.
+
 `POST /v1/corporate/pre_registrations/update` (`updatePreRegistrations`) takes the same
 `employees` / `dependants` arrays (at most 250 rows in total). Send the identifier and only
-the fields to change; no other key is required.
+the fields to change; no other key is required. For example:
 
 ```json
 {
@@ -277,25 +310,10 @@ the fields to change; no other key is required.
 }
 ```
 
-Employees:
-
-- Found by `email`, or by `company_id` + `employee_code` when no email is sent. The email
-  itself can't be changed.
-- Updatable: `first_name`, `last_name`, `date_of_birth`, `gender`, `mobile_number`, `vip`,
-  `entity_name`, `employee_office_location`, `department`, `grade` (must be one of the
-  company's grades), `date_of_joining`, `employee_code`, `api_customer_id`, and
-  `voluntary_plan_ids` (same entries as above; an invalid or already active plan fails the
-  row).
-
-Dependants:
-
-- Found by `api_customer_id`, then `dependent_code`, under the employee given by
-  `guardian_email` (or `company_id` + `guardian_employee_code`). Otherwise by
-  `mobile_number`, which must match exactly one dependant. At least one of the three is
-  required.
-- Updatable: `first_name`, `last_name`, `email`, `date_of_birth`, `gender`, `mobile_number`,
-  `relation`, `authorised_dependent`, `api_customer_id`. Sending `dependent_code` on a
-  dependant found another way sets or changes its code; an empty one never clears it.
+| | Found by | Updatable |
+|---|---|---|
+| Employees | `email`, or `company_id` + `employee_code` when no email is sent. The email itself can't be changed | `first_name`, `last_name`, `date_of_birth`, `gender`, `mobile_number`, `vip`, `entity_name`, `employee_office_location`, `department`, `grade` (must be one of the company's grades), `date_of_joining`, `employee_code`, `api_customer_id`, and `voluntary_plan_ids` (same entries as above; an invalid or already active plan fails the row) |
+| Dependants | `api_customer_id`, then `dependent_code`, under the employee given by `guardian_email` (or `company_id` + `guardian_employee_code`). Otherwise by `mobile_number`, which must match exactly one dependant. At least one of the three is required | `first_name`, `last_name`, `email`, `date_of_birth`, `gender`, `mobile_number`, `relation`, `authorised_dependent`, `api_customer_id`. Sending `dependent_code` on a dependant found another way sets or changes its code; an empty one never clears it |
 
 On update, `mobile_number` is stored as the member's alternate mobile number and must be
 10 digits. `gender` must be `Male`, `Female` or `Non-binary` (any case). Other values are
@@ -303,7 +321,10 @@ not format-checked on update.
 
 ### 7.4 Deactivate members or dependants
 
-`POST /v1/corporate/pre_registrations/deactivate` (`deactivatePreRegistrations`)
+Remove members who leave.
+
+`POST /v1/corporate/pre_registrations/deactivate` (`deactivatePreRegistrations`). For
+example:
 
 ```json
 { "employees": ["jane.doe@example.com"], "dependants": ["9999999997"] }
@@ -311,12 +332,16 @@ not format-checked on update.
 
 - `employees` is a list of employee emails; `dependants` a list of dependant mobile numbers.
   At most 250 entries in total.
-- Deactivating an employee also deactivates all their dependants and cancels their ongoing
-  appointments.
 - Only members of companies your credentials can act on are deactivated; others are
   reported as not found.
 
+> [!CAUTION]
+> Deactivating an employee also deactivates all their dependants and cancels their ongoing
+> appointments.
+
 ### 7.5 Get the request status
+
+Check how a queued request went.
 
 `GET /v1/corporate/pre_registrations/{request_id}/status` (`getPreRegistrationStatus`)
 
@@ -326,7 +351,7 @@ to read it are described in [8. Checking the outcome](#8-checking-the-outcome). 
 
 ## 8. Checking the outcome
 
-`GET /v1/corporate/pre_registrations/{request_id}/status`
+`GET /v1/corporate/pre_registrations/{request_id}/status` returns, for example:
 
 ```json
 {
@@ -361,9 +386,6 @@ to read it are described in [8. Checking the outcome](#8-checking-the-outcome). 
   backoff) until it is `completed` or `failed`. See [9. Statuses](#9-statuses).
 - Larger requests take longer. If a request stays `inprogress` far longer than usual, send
   its `request_id` to hlthstack.
-- To retry, fix the rows in `failure_records` and send only those rows in a new request.
-  Rows that succeeded already exist and would fail as duplicates. To change or remove a
-  registered member, use `updatePreRegistrations` or `deactivatePreRegistrations`, not create.
 - Create and update requests: success records are the members as stored, dependants
   included (`employee_code` holds a dependant's `dependent_code`; `guardian_email` and
   `relation` are set). `customer_plans` lists active, upcoming and grace-period
@@ -371,6 +393,11 @@ to read it are described in [8. Checking the outcome](#8-checking-the-outcome). 
 - Deactivate requests: success records carry `status` (`Active` / `Inactive`). Failure
   records are `{"errors": ["employee with email: ... not found"]}`.
 - Unknown `request_id`: `404 {"message": "Request couldn't find with the id provided"}`.
+
+> [!WARNING]
+> To retry, fix the rows in `failure_records` and send only those rows in a new request.
+> Rows that succeeded already exist and would fail as duplicates. To change or remove a
+> registered member, use `updatePreRegistrations` or `deactivatePreRegistrations`, not create.
 
 ### Row errors you may see
 

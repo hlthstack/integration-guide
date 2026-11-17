@@ -2,9 +2,17 @@
 
 # Errors
 
-Error bodies are not uniform across endpoints. Check the HTTP status first, then parse the
-body defensively. For the errors partners hit most often and how to fix each, see
-[common errors](common-errors.md). The shapes you will see:
+How hlthstack reports errors: the body shapes, what each status code means, the most common
+messages, and when to retry. For the errors partners hit most often and how to fix each, see
+[common errors](common-errors.md).
+
+> [!IMPORTANT]
+> Error bodies are not uniform across endpoints. Check the HTTP status first, then parse the
+> body defensively.
+
+## Error shapes
+
+The shapes you will see:
 
 | Shape | Example | Where |
 |---|---|---|
@@ -20,6 +28,8 @@ body defensively. For the errors partners hit most often and how to fix each, se
 
 ## Status codes
 
+What each status means across the API:
+
 | Status | Meaning |
 |---|---|
 | 200 | Success. Some ePharmacy responses still carry `"success": false` in nested objects; see [epharmacy.md](epharmacy.md) |
@@ -33,6 +43,8 @@ body defensively. For the errors partners hit most often and how to fix each, se
 | 500 | Server error, or a provider's system couldn't be reached |
 
 ## Common messages
+
+Messages you may see in the bodies above, and what to do:
 
 | Message | Fix |
 |---|---|
@@ -59,7 +71,9 @@ body defensively. For the errors partners hit most often and how to fix each, se
 ## Retrying
 
 - Retry 5xx, 409 and network errors with backoff.
-- Don't blindly retry `POST /api/appointments` or consultation creation: first check with
-  `getAppointment` / your webhooks whether the booking was created.
 - Prescription digitization and partner-payment confirmation are safe to retry (use an
   `Idempotency-Key` for digitization).
+
+> [!WARNING]
+> Don't blindly retry `POST /api/appointments` or consultation creation: first check with
+> `getAppointment` / your webhooks whether the booking was created.

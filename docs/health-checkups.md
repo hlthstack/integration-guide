@@ -7,14 +7,24 @@
 - **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
 - **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#book-a-health-checkup-end-to-end) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#book-a-health-checkup) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#book-a-health-checkup-end-to-end).
 
+**On this page**
+
+1. [Overview](#1-overview)
+2. [Onboarding checklist](#2-onboarding-checklist)
+3. [How a booking works](#3-how-a-booking-works)
+4. [Booking types](#4-booking-types)
+5. [Conventions and common errors](#5-conventions-and-common-errors)
+6. [Booking rules and time windows](#6-booking-rules-and-time-windows)
+7. [API reference](#7-api-reference)
+8. [Webhooks](#8-webhooks)
+9. [Appointment statuses](#9-appointment-statuses)
+10. [Troubleshooting](#10-troubleshooting)
+
 ## 1. Overview
 
 Book health checks, lab tests, dental and vision checkups and vaccinations at a provider
 (in-clinic) or at the member's address (home collection). Full request and response schemas
 are in [`openapi.yaml`](../openapi/openapi.yaml) (tag **Health Checkups**).
-
-`service_name` values commonly used: `ahc` (health checks / diagnostics), `dental`, `vision`,
-`flu_vaccination`. The full list is in the API reference.
 
 | Term | Meaning |
 |---|---|
@@ -23,11 +33,13 @@ are in [`openapi.yaml`](../openapi/openapi.yaml) (tag **Health Checkups**).
 | Booking | One booking request, identified by `booking_id` (e.g. `EKI` + 19 characters). It can cover several members. |
 | Appointment | One member's appointment within a booking, identified by `appointment_id` (`APT` + 9 characters). |
 
-Plans: `plan_id` is optional on a booking and defaults to the base plan. `customer_plan_id` /
-`subscription_id` pick which subscription pays (see [wallet.md](wallet.md)).
-
-Booking types: `inclinic` (at the provider) or `home_collection` (at the member's address);
-see [section 4](#4-booking-types).
+- **Services:** `service_name` values commonly used: `ahc` (health checks / diagnostics),
+  `dental`, `vision`, `flu_vaccination`. The full list is in the API reference.
+- **Plans:** `plan_id` is optional on a booking and defaults to the base plan.
+  `customer_plan_id` / `subscription_id` pick which subscription pays (see
+  [wallet.md](wallet.md)).
+- **Booking types:** `inclinic` (at the provider) or `home_collection` (at the member's
+  address); see [section 4](#4-booking-types).
 
 ## 2. Onboarding checklist
 
@@ -61,20 +73,18 @@ package must support it.
 | First bookable date | `slot_lead_time` 1: tomorrow if before 2:00 PM provider time | `slot_lead_time` 1: tomorrow if before 7:00 PM provider time |
 | Change address on reschedule | Not possible; an `address` is ignored | Send `address` together with `provider_id` |
 
-In-clinic can't be converted to home collection. To switch, cancel it and book again.
+> [!NOTE]
+> In-clinic can't be converted to home collection. To switch, cancel it and book again.
 
 ## 5. Conventions and common errors
 
-- **Date-times**: `appointment_date_time` is ISO 8601 UTC. A time without `Z` or an offset
-  is read as UTC. Always send the offset; the safest value is the slot's `utc_slot_time`.
-- **Provider time zone**: the first bookable date and the payment link expiry use the
-  provider's time (`timezone`). Booking hours are in IST.
-- **Ids**: `booking_id` is `EKI` + 19 characters (e.g. `EKI0000000001700000000`);
-  `appointment_id` is `APT` + 9 characters (e.g. `APT1A2B3C4D5`). `api_customer_id` is your
-  id for the member: alphanumeric, unique within the request.
-- **Lists**: `package_ids` for `listProviders` is comma-separated. Partial booking-level
-  responses give `success` and `failed` as comma-separated appointment ids.
-- **Mobile numbers**: 10 digits, no `+91`.
+| Topic | Convention |
+|---|---|
+| Date-times | `appointment_date_time` is ISO 8601 UTC. A time without `Z` or an offset is read as UTC. Always send the offset; the safest value is the slot's `utc_slot_time`. |
+| Provider time zone | The first bookable date and the payment link expiry use the provider's time (`timezone`). Booking hours are in IST. |
+| Ids | `booking_id` is `EKI` + 19 characters (e.g. `EKI0000000001700000000`); `appointment_id` is `APT` + 9 characters (e.g. `APT1A2B3C4D5`). `api_customer_id` is your id for the member: alphanumeric, unique within the request. |
+| Lists | `package_ids` for `listProviders` is comma-separated. Partial booking-level responses give `success` and `failed` as comma-separated appointment ids. |
+| Mobile numbers | 10 digits, no `+91`. |
 
 Error shapes:
 
@@ -86,7 +96,8 @@ Error shapes:
 | `422 {"errors":{"messages":[...]}}` | e.g. a duplicate booking |
 | `422 {"msg": "...", "recall": false}` | Booking couldn't be created |
 
-Build status handling to tolerate statuses you don't recognise.
+> [!TIP]
+> Build status handling to tolerate statuses you don't recognise.
 
 ## 6. Booking rules and time windows
 
@@ -94,23 +105,22 @@ Build status handling to tolerate statuses you don't recognise.
 
 These apply when you book and when you reschedule or cancel:
 
-- **Booking hours:** the slot must start between 06:00 and 20:59 IST (until 22:59 at some
-  providers), otherwise `appointment time is outside provider booking hours`. Booking with a
-  slot's `utc_slot_time` keeps you inside these hours.
-- **Day's notice:** at a provider with a `slot_lead_time` of 1 or more, a time today fails
-  with `provider requires at least one day's notice`.
-- **Time zone:** a time without `Z` or an offset is read as UTC. Always send the offset; the
-  safest value is the slot's `utc_slot_time`.
-- **Recent changes:** at providers connected through a partner integration, an appointment
-  booked or rescheduled less than 5 minutes ago can't be changed yet (`This appointment cannot be rescheduled` / `This appointment cannot be
-  cancelled`). Retry after a few minutes.
-- **Provider rules:** some providers don't accept changes after confirmation or after a
-  phlebotomist is assigned, limit the number of reschedules, stop changes to next-day
-  bookings after a cut-off the evening before, or don't allow same-day cancellation. If the
-  booking wasn't made or changed in the last 5 minutes, treat such a refusal as final.
-- **Reschedule and cancel cut-off:** until 30 minutes before the slot.
-- **Plan service period:** a new date must fall inside the plan's service period. A booking
-  whose plan is no longer active can't be rescheduled.
+| Rule | Details |
+|---|---|
+| **Booking hours** | The slot must start between 06:00 and 20:59 IST (until 22:59 at some providers), otherwise `appointment time is outside provider booking hours`. Booking with a slot's `utc_slot_time` keeps you inside these hours. |
+| **Day's notice** | At a provider with a `slot_lead_time` of 1 or more, a time today fails with `provider requires at least one day's notice`. |
+| **Time zone** | A time without `Z` or an offset is read as UTC. Always send the offset; the safest value is the slot's `utc_slot_time`. |
+| **Recent changes** | At providers connected through a partner integration, an appointment booked or rescheduled less than 5 minutes ago can't be changed yet (`This appointment cannot be rescheduled` / `This appointment cannot be cancelled`). Retry after a few minutes. |
+| **Provider rules** | Some providers don't accept changes after confirmation or after a phlebotomist is assigned, limit the number of reschedules, stop changes to next-day bookings after a cut-off the evening before, or don't allow same-day cancellation. |
+| **Reschedule and cancel cut-off** | Until 30 minutes before the slot. |
+| **Plan service period** | A new date must fall inside the plan's service period. A booking whose plan is no longer active can't be rescheduled. |
+
+> [!IMPORTANT]
+> Reschedule and cancel are possible only until 30 minutes before the slot.
+
+> [!WARNING]
+> If the booking wasn't made or changed in the last 5 minutes, treat a provider-rule refusal
+> as final; don't keep retrying.
 
 ### First bookable date
 
@@ -127,35 +137,64 @@ An earlier `booking_date` returns `400 {"message": "Booking date ... is before t
 ### Payment window
 
 A `payment_pending` booking's `payment_link` stops working at `payment_link_expires_at`:
-normally 17:00 (provider time) the day before the slot, or 2 hours after booking for
-bookings made later than that.
+
+- normally 17:00 (provider time) the day before the slot;
+- or 2 hours after booking, for bookings made later than that.
 
 ## 7. API reference
 
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/providers` | [List providers](#71-list-providers) for a service, packages and location |
+| `GET` | `/api/providers/{provider_id}/{benefit_type}/slots` | [Get slots](#72-get-slots) for a provider |
+| `POST` | `/api/appointments` | [Create a booking](#73-create-a-booking) for one or more members |
+| `GET` | `/api/appointments?booking_id=...` | [Get a booking](#74-get-a-booking) or one appointment |
+| `PATCH` | `/api/bookings/{booking_id}/reschedule`, `/api/appointments/{appointment_id}/reschedule` | [Reschedule](#75-reschedule) a booking or one appointment |
+| `PATCH` | `/api/bookings/{booking_id}/cancel`, `/api/appointments/{appointment_id}/cancel` | [Cancel](#76-cancel) a booking or one appointment |
+| `GET` | `/api/appointments/{id}/voucher` | [Voucher](#77-voucher) PDF |
+| `GET` | `/api/appointments/{id}/reports` | [Reports](#78-reports) |
+| `GET` | `/api/appointments/{id}/lab_results` | [Lab results](#79-lab-results) (structured values) |
+
 ### 7.1 List providers
+
+Find providers that deliver a service and packages near a location.
 
 `GET /api/providers`
 
-- Required: `service_name`, `package_ids` (comma-separated) and `pincode` (or `latitude` +
-  `longitude`).
-- Optional: `radius` (km, default 100), `page`/`per_page` (max 50), `plan_id`,
-  `auto_allocate_provider` (home collection: let hlthstack pick the provider).
+| Parameter | Required | Notes |
+|---|---|---|
+| `service_name` | yes | |
+| `package_ids` | yes | Comma-separated |
+| `pincode` | yes, or `latitude` + `longitude` | |
+| `radius` | no | km, default 100 |
+| `page` / `per_page` | no | `per_page` max 50 |
+| `plan_id` | no | |
+| `auto_allocate_provider` | no | Home collection: let hlthstack pick the provider |
+
+Response notes:
+
 - Results are sorted by distance. Each provider has `home_collection_enabled`, `timezone` and
   `slot_lead_time`.
 - Don't rely on `provider_slots` in this response; it is deprecated. Use 7.2.
-- A service that isn't enabled on your plan returns
-  `403 {"errors":{"service_name":["this service is not enabled for you"]}}`.
+
+Errors: a service that isn't enabled on your plan returns
+`403 {"errors":{"service_name":["this service is not enabled for you"]}}`.
 
 ### 7.2 Get slots
+
+Get a provider's bookable slots.
 
 `GET /api/providers/{provider_id}/{benefit_type}/slots`
 
 - Send `package_ids` and `pincode`. Pass `booking_date` for one day, or omit it for up to
   `count_days` (default 14).
 - Read `booking_slots[].slots[]`; use a slot's `utc_slot_time` when booking.
-- A `booking_date` before the [first bookable date](#first-bookable-date) returns a `400`.
+- Errors: a `booking_date` before the [first bookable date](#first-bookable-date) returns a
+  `400`.
 
 ### 7.3 Create a booking
+
+Book one or more members into one provider slot.
 
 `POST /api/appointments`
 
@@ -171,19 +210,27 @@ bookings made later than that.
 | `customer_plan_id` / `subscription_id` | no | Pick which subscription pays, see [wallet.md](wallet.md) |
 | `api_partner_order_id` | no | Your order reference (a per-customer value overrides it) |
 
-`customers[]` fields: `name`, `api_customer_id` (your id, alphanumeric, unique within the
-request), `mobile_number` (10 digits, no `+91`), `gender` (`male`, `female`, `non-binary`;
-lowercase), `dob` (`YYYY-MM-DD`; members must be at least 1 year old), `package_ids`, and
-optionally `booking_customer`, `vip`, `api_partner_order_id`. The booking customer is the last
-entry with `booking_customer: true`, or the first entry. Set `booking_customer` on one entry
-only.
+`customers[]` fields:
 
-There's no fixed limit on members per booking, but every member takes a place in the same
-slot. If the provider's slot can't take all of them, the booking fails with an
-`appointment_date_time` error that starts `Booking threshold reached` and ends
-`(its slots are full)`. Pick another slot or provider, or split the members across bookings.
+| Field | Required | Notes |
+|---|---|---|
+| `name` | yes | |
+| `api_customer_id` | yes | Your id, alphanumeric, unique within the request |
+| `mobile_number` | yes | 10 digits, no `+91` |
+| `gender` | yes | `male`, `female`, `non-binary`; lowercase |
+| `dob` | yes | `YYYY-MM-DD`; members must be at least 1 year old |
+| `package_ids` | yes | |
+| `booking_customer` | no | Set on one entry only. The booking customer is the last entry with `booking_customer: true`, or the first entry |
+| `vip` | no | |
+| `api_partner_order_id` | no | Overrides the booking-level value |
 
-Response:
+> [!IMPORTANT]
+> There's no fixed limit on members per booking, but every member takes a place in the same
+> slot. If the provider's slot can't take all of them, the booking fails with an
+> `appointment_date_time` error that starts `Booking threshold reached` and ends
+> `(its slots are full)`. Pick another slot or provider, or split the members across bookings.
+
+Example response:
 
 ```json
 {
@@ -199,27 +246,32 @@ Response:
 }
 ```
 
-- `status: "confirmed"` means the booking was paid from the wallet. The appointment itself
-  starts at `new` and moves to `confirmed` when the provider confirms (you get a webhook).
-- `status: "payment_pending"` with `payment_link` (and `payment_link_expires_at`) means the
-  member must pay the remainder. Its appointments start at `payment_pending` and move to
-  `new` once the member pays. The link stops working at `payment_link_expires_at`: normally
-  17:00 (provider time) the day before the slot, or 2 hours after booking for bookings made
-  later than that. An unpaid booking is never confirmed, and no webhook is sent while it is
-  `payment_pending`.
+Response notes:
+
+| Booking `status` | Meaning |
+|---|---|
+| `status: "confirmed"` | The booking was paid from the wallet. The appointment itself starts at `new` and moves to `confirmed` when the provider confirms (you get a webhook). |
+| `status: "payment_pending"` | Comes with `payment_link` (and `payment_link_expires_at`): the member must pay the remainder. Its appointments start at `payment_pending` and move to `new` once the member pays. |
+
+> [!WARNING]
+> The `payment_link` stops working at `payment_link_expires_at`: normally 17:00 (provider
+> time) the day before the slot, or 2 hours after booking for bookings made later than that.
+> An unpaid booking is never confirmed, and no webhook is sent while it is `payment_pending`.
 
 Errors:
 
-- Validation errors are `400 {"errors": {field: [messages]}}`; nested fields are prefixed,
-  e.g. `customer_mobile_number`, `address_pincode`.
-- A duplicate booking for the same member, package, provider and slot returns
-  `422 {"errors":{"messages":["customer has an ongoing appointment for same package and provider for same slot"]}}`.
-- Other failures: `422 {"msg": "failed to create booking please try again later", "recall": false}`,
-  and `422 {"msg": "Failed to confirm booking due to payment failure.", ...}` when the benefit
-  deduction failed (the wallet is not charged).
-- The [booking rules](#booking-rules) apply.
+| Response | Cause |
+|---|---|
+| `400 {"errors": {field: [messages]}}` | Validation errors; nested fields are prefixed, e.g. `customer_mobile_number`, `address_pincode` |
+| `422 {"errors":{"messages":["customer has an ongoing appointment for same package and provider for same slot"]}}` | A duplicate booking for the same member, package, provider and slot |
+| `422 {"msg": "failed to create booking please try again later", "recall": false}` | Other failures |
+| `422 {"msg": "Failed to confirm booking due to payment failure.", ...}` | The benefit deduction failed (the wallet is not charged) |
+
+The [booking rules](#booking-rules) apply.
 
 ### 7.4 Get a booking
+
+Read a booking's appointments and their current state.
 
 `GET /api/appointments?booking_id=...` returns every appointment in the booking; add
 `appointment_id=...` for one. Each appointment has the same shape as the webhook payload
@@ -227,23 +279,25 @@ Errors:
 
 ### 7.5 Reschedule
 
+Move a whole booking, or one appointment, to a new time (and optionally provider).
+
 - Whole booking: `PATCH /api/bookings/{booking_id}/reschedule`
 - One appointment: `PATCH /api/appointments/{appointment_id}/reschedule`
 
-Body: `appointment_date_time` (required); `provider_id` to move to another provider; and,
-for home collection, `address` together with `provider_id` to change the address.
+| Body field | Required | Notes |
+|---|---|---|
+| `appointment_date_time` | yes | |
+| `provider_id` | no | To move to another provider |
+| `address` | no | Home collection only, together with `provider_id`, to change the address |
 
 Rules:
 
 - Until 30 minutes before the slot. Some providers also refuse changes once a phlebotomist is
   assigned (see [Booking rules](#booking-rules)).
 - Appointments at providers connected through a partner integration can't move to another
-  provider: sending a different `provider_id` returns
-  `422 {"errors":{"provider_id":["Appointment cannot be rescheduled to a different provider."]}}`.
-  Cancel and book again instead.
-- The new date must fall inside the plan's service period, otherwise
-  `400 {"errors":{"messages":["The slots are not available for the selected date. please reschedule the appointment for next available date"]}}`.
-  A booking whose plan is no longer active can't be rescheduled.
+  provider. Cancel and book again instead.
+- The new date must fall inside the plan's service period. A booking whose plan is no longer
+  active can't be rescheduled.
 - In-clinic can't be converted to home collection. An `address` sent when rescheduling an
   in-clinic appointment is ignored without an error, and the appointment stays in-clinic. To
   switch, cancel it and book again.
@@ -255,15 +309,23 @@ appointment ids:
 { "message": "Some appointments cannot be rescheduled", "success": "APT1A2B3C4D5", "failed": "APT1A2B3C4D6" }
 ```
 
-If nothing can be rescheduled: `400 {"errors":{"messages":["This booking cannot be rescheduled"]}}`.
+Errors:
+
+| Response | Cause |
+|---|---|
+| `422 {"errors":{"provider_id":["Appointment cannot be rescheduled to a different provider."]}}` | A different `provider_id` for a partner-integrated provider |
+| `400 {"errors":{"messages":["The slots are not available for the selected date. please reschedule the appointment for next available date"]}}` | The new date is outside the plan's service period |
+| `400 {"errors":{"messages":["This booking cannot be rescheduled"]}}` | Nothing can be rescheduled |
 
 ### 7.6 Cancel
+
+Cancel a whole booking, or one appointment.
 
 - Whole booking: `PATCH /api/bookings/{booking_id}/cancel`
 - One appointment: `PATCH /api/appointments/{appointment_id}/cancel`
 
 Body (optional): `reason`, up to 255 characters, recorded as the cancellation reason.
-Without it, the reason is `Cancelled by your booking partner`.
+Without it, the reason is `Cancelled by your booking partner`. For example:
 
 ```json
 { "reason": "Member is travelling" }
@@ -274,6 +336,8 @@ above (`"Some appointments cannot be cancelled"`).
 
 ### 7.7 Voucher
 
+Download the appointment voucher.
+
 `GET /api/appointments/{id}/voucher`
 
 Available when the appointment is `confirmed`; returns a PDF. Before that:
@@ -281,16 +345,21 @@ Available when the appointment is `confirmed`; returns a PDF. Before that:
 
 ### 7.8 Reports
 
+Get links to the member's reports after the visit.
+
 `GET /api/appointments/{id}/reports`
 
 Available at `partially_received` or `received`. Returns `{"reports": [urls]}`, or
 `{"message": "Reports will be available to download once they are verified"}`.
 
-Report links (from this endpoint, `getAppointment` and the webhook's `reports`) are signed
-URLs that expire **5 minutes** after they're issued. Download the files right away, and fetch
-fresh links when you need them again; don't store the URLs.
+> [!WARNING]
+> Report links (from this endpoint, `getAppointment` and the webhook's `reports`) are signed
+> URLs that expire **5 minutes** after they're issued. Download the files right away, and
+> fetch fresh links when you need them again; don't store the URLs.
 
 ### 7.9 Lab results
+
+Get structured lab values.
 
 `GET /api/appointments/{id}/lab_results`
 

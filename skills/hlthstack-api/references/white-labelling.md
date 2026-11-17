@@ -3,7 +3,11 @@
 # White-labelling
 
 Communications to your members (employees of the companies you serve) can go out under your
-identity instead of hlthstack's. hlthstack sets this up for you; there is no API call to make.
+identity instead of hlthstack's.
+
+> [!NOTE]
+> hlthstack sets this up for you; there is no API call to make. See
+> [how to set it up](#4-how-to-set-it-up).
 
 ## 1. Options
 
@@ -34,6 +38,6 @@ identity instead of hlthstack's. hlthstack sets this up for you; there is no API
 2. Send the app name, sender name and logo to use.
 3. hlthstack enables it for those companies and confirms when it is live.
 
-For what members receive and when, see [product communications](product-communications.md).
-To theme the embedded member app itself, see the
-[member app embed guide](https://github.com/hlthstack/web#readme).
+**See also:** [product communications](product-communications.md) for what members receive
+and when; the [member app embed guide](https://github.com/hlthstack/web#readme) to theme the
+embedded member app itself.

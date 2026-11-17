@@ -45,9 +45,16 @@ def guide_body(name: str) -> str:
     text = (ROOT / "docs" / name).read_text(encoding="utf-8")
     text = re.sub(r"\A# [^\n]*\n+", "", text)  # the section already has a title
 
+    # The site and Postman have their own navigation, so drop the guides' "On this page" lists.
+    text = re.sub(r"^\*\*On this page:\*\*.*?(?:\n\n|\Z)", "", text, flags=re.M | re.S)
+    text = re.sub(r"^\*\*On this page\*\*\n\n(?:\d+\. .*\n)+\n?", "", text, flags=re.M)
+
     def absolute(m: re.Match) -> str:
         target = m.group(2)
-        if re.match(r"[a-z]+:|#", target):
+        if target.startswith("#"):
+            # Headings get no anchors on the site or in Postman; send in-page links to GitHub.
+            return f"{m.group(1)}({REPO}/docs/{name}{target})"
+        if re.match(r"[a-z]+:", target):
             return m.group(0)
         path, _, anchor = target.partition("#")
         url = f"{REPO}/{(Path('docs') / path).as_posix()}"
@@ -55,7 +62,17 @@ def guide_body(name: str) -> str:
         return f"{m.group(1)}({url}{'#' + anchor if anchor else ''})"
 
     # Relative links would point nowhere on the docs site or in Postman.
-    return re.sub(r"(\[[^\]]*\])\(([^)\s]+)\)", absolute, text).strip()
+    text = re.sub(r"(\[[^\]]*\])\(([^)\s]+)\)", absolute, text)
+    # GitHub alerts ("> [!NOTE]") render as boxes on GitHub only; elsewhere show a bold label.
+    text = re.sub(
+        r"^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\n> ",
+        lambda m: f"> **{m.group(1).capitalize()}:** ",
+        text,
+        flags=re.M,
+    )
+    # Neither Redoc nor Postman draws Mermaid diagrams; the guides describe each flow in words too.
+    text = re.sub(r"```mermaid\n.*?```\n?", "", text, flags=re.S)
+    return text.strip()
 
 
 def main() -> int:

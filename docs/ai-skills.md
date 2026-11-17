@@ -21,33 +21,54 @@ with this repo.
 | Codex | `codex plugin marketplace add hlthstack/integration-guide` then `codex plugin add hlthstack@hlthstack` | Ask about hlthstack, or type `$` and pick `hlthstack-api` |
 | ChatGPT (Business, Enterprise, Edu) | Admin imports `https://github.com/hlthstack/integration-guide` as a plugin marketplace, or upload the skill | Ask about hlthstack, or mention `@hlthstack` |
 
+How the three assistants compare:
+
+| | Claude Code | Codex | ChatGPT |
+|---|---|---|---|
+| Plugin install | [Option 1](#option-1-install-as-a-plugin-recommended): each developer runs two commands | [Option 1](#option-1-install-as-a-plugin-recommended-1): each developer runs two commands | [Option 1](#option-1-import-the-plugin-marketplace-workspace-admins): a workspace admin imports the marketplace |
+| Other ways to install | Copy the skill folder | Codex's skill installer, or copy the skill folder | Upload the skill as a zip |
+| Plugin updates | `claude plugin marketplace update` and `claude plugin update`, then restart | `codex plugin marketplace upgrade` | Synced daily |
+| Pick the skill explicitly | `/hlthstack:hlthstack-api` (plugin) or `/hlthstack-api` (folder) | `$hlthstack-api`, or `/skills` | `@hlthstack` (plugin), or **+** in the composer |
+| Calls the API | Asks before running commands that call it | Asks before running commands that call it | No: run the code it writes yourself |
+
+> [!CAUTION]
+> Never paste API credentials into the assistant's chat. Keep them in environment variables
+> or your secret manager; see [credentials and safety](#credentials-and-safety).
+
 ## Claude Code
+
+1. Install the skill: as a plugin ([option 1](#option-1-install-as-a-plugin-recommended)) or
+   by copying the folder ([option 2](#option-2-copy-the-skill-folder)).
+2. Start Claude Code in your project and ask about hlthstack
+   ([run it](#run-it-in-claude-code)).
 
 ### Option 1: install as a plugin (recommended)
 
 The repo is a Claude Code plugin marketplace. Installing the plugin keeps the skill
 up to date with this repo.
 
-```bash
-claude plugin marketplace add hlthstack/integration-guide
-claude plugin install hlthstack@hlthstack
-```
+1. Add the marketplace and install the plugin:
 
-The same commands work inside a Claude Code session:
+   ```bash
+   claude plugin marketplace add hlthstack/integration-guide
+   claude plugin install hlthstack@hlthstack
+   ```
 
-```text
-/plugin marketplace add hlthstack/integration-guide
-/plugin install hlthstack@hlthstack
-```
+   The same commands work inside a Claude Code session:
+
+   ```text
+   /plugin marketplace add hlthstack/integration-guide
+   /plugin install hlthstack@hlthstack
+   ```
+
+2. Check it's installed:
+
+   ```bash
+   claude plugin details hlthstack@hlthstack
+   ```
 
 Each developer runs these once. To give your whole team the skill without any install
 step, use option 2 at project level and commit the folder.
-
-Check it's installed:
-
-```bash
-claude plugin details hlthstack@hlthstack
-```
 
 Update to the latest version, then restart Claude Code:
 
@@ -118,21 +139,29 @@ claude -p "Using the hlthstack API, which header does pre-registration use for i
 
 ## Codex
 
+1. Install the skill: as a plugin
+   ([option 1](#option-1-install-as-a-plugin-recommended-1)), with Codex's skill installer
+   ([option 2](#option-2-install-with-codexs-skill-installer)) or by copying the folder
+   ([option 3](#option-3-copy-the-skill-folder)).
+2. Start Codex in your project and ask about hlthstack ([run it](#run-it-in-codex)).
+
 ### Option 1: install as a plugin (recommended)
 
 The repo is a Codex plugin marketplace. Installing the plugin keeps the skill up to date
 with this repo.
 
-```bash
-codex plugin marketplace add hlthstack/integration-guide
-codex plugin add hlthstack@hlthstack
-```
+1. Add the marketplace and install the plugin:
 
-Check it's available:
+   ```bash
+   codex plugin marketplace add hlthstack/integration-guide
+   codex plugin add hlthstack@hlthstack
+   ```
 
-```bash
-codex plugin list
-```
+2. Check it's available:
+
+   ```bash
+   codex plugin list
+   ```
 
 Update to the latest version of the repo:
 
@@ -153,18 +182,20 @@ user. Options 2 and 3 install the skill on its own that way.
 
 ### Option 2: install with Codex's skill installer
 
-Start Codex and ask its built-in installer to fetch the skill from GitHub:
+1. Start Codex:
 
-```bash
-codex
-```
+   ```bash
+   codex
+   ```
 
-```text
-> $skill-installer install https://github.com/hlthstack/integration-guide/tree/main/skills/hlthstack-api
-```
+2. Ask its built-in installer to fetch the skill from GitHub:
 
-Codex usually picks up a new skill on its own; if `$hlthstack-api` doesn't show up, restart
-Codex.
+   ```text
+   > $skill-installer install https://github.com/hlthstack/integration-guide/tree/main/skills/hlthstack-api
+   ```
+
+3. Codex usually picks up a new skill on its own; if `$hlthstack-api` doesn't show up,
+   restart Codex.
 
 The installer puts the skill in `~/.codex/skills/hlthstack-api` (under `$CODEX_HOME` if you
 set it). To update, delete that folder and run the install again; to remove the skill,
@@ -216,6 +247,11 @@ Use single quotes so your shell doesn't expand `$hlthstack-api`.
 
 ## ChatGPT
 
+1. Make the skill available: a workspace admin imports the plugin marketplace
+   ([option 1](#option-1-import-the-plugin-marketplace-workspace-admins)), or you upload the
+   skill ([option 2](#option-2-upload-the-skill)).
+2. Ask about hlthstack in any chat ([run it](#run-it-in-chatgpt)).
+
 ChatGPT uses the same skills and plugins as Codex. Skills and plugin uploads are available
 on ChatGPT Business, Enterprise, Healthcare and Edu, subject to your workspace settings.
 
@@ -245,27 +281,36 @@ ChatGPT syncs the marketplace daily, so members get updates to the skill automat
 Ask about hlthstack in any chat; ChatGPT uses the skill when it's relevant. To pick it
 explicitly, mention `@hlthstack` (plugin) or select the skill from **+** in the composer.
 
-ChatGPT can explain the API and write integration code with the skill, but it doesn't call
-the hlthstack API for you. Run the code it writes from your own environment.
+> [!NOTE]
+> ChatGPT can explain the API and write integration code with the skill, but it doesn't call
+> the hlthstack API for you. Run the code it writes from your own environment.
 
 ### Custom GPTs
 
-Earlier versions of this repo described a custom GPT with an action for the hlthstack API.
-OpenAI is retiring custom GPTs on 11 December 2026 (later for some Enterprise workspaces),
-and a GPT's custom actions don't carry over when it's migrated to a plugin. If you built
-that GPT, replace it with the plugin or skill above.
+> [!WARNING]
+> Earlier versions of this repo described a custom GPT with an action for the hlthstack API.
+> OpenAI is retiring custom GPTs on 11 December 2026 (later for some Enterprise workspaces),
+> and a GPT's custom actions don't carry over when it's migrated to a plugin. If you built
+> that GPT, replace it with the plugin or skill above.
 
 ## Credentials and safety
 
-- Keep API credentials in environment variables (for example `HS_USERNAME`,
-  `HS_PASSWORD`) or your secret manager. Don't paste them into the chat. The skill tells the
-  assistant to read them from the environment and never print or hard-code them.
+> [!CAUTION]
+> Keep API credentials in environment variables (for example `HS_USERNAME`, `HS_PASSWORD`) or
+> your secret manager. Don't paste them into the chat.
+
+- The skill tells the assistant to read credentials from the environment and never print or
+  hard-code them.
 - The skill uses staging unless you ask for production, and asks before creating,
   rescheduling or cancelling bookings or orders, or changing pre-registered members.
-- Both tools ask before running commands that call the API. Review what they run, especially
-  against production.
+- Both tools ask before running commands that call the API.
+
+> [!WARNING]
+> Review what the assistant runs, especially against production.
 
 ## Example prompts
+
+Prompts that work well with the skill:
 
 - "Generate a typed client for the hlthstack consultation endpoints we use."
 - "Our `createAppointment` call returns 422; here's the request and response. What's wrong?"
@@ -277,12 +322,14 @@ that GPT, replace it with the plugin or skill above.
 
 ## Maintaining the skill
 
-`skills/hlthstack-api/references/` is generated from `openapi/` and `docs/`. After changing
-either, regenerate it and commit the result; CI fails if the copies are out of date:
+`skills/hlthstack-api/references/` is generated from `openapi/` and `docs/`.
 
-```bash
-python3 scripts/sync_skill_references.py
-```
+1. After changing either, regenerate it and commit the result; CI fails if the copies are out
+   of date:
 
-When the skill or its references change, bump `version` in both `.claude-plugin/plugin.json`
-and `.codex-plugin/plugin.json`, so plugin installs pick up the update.
+   ```bash
+   python3 scripts/sync_skill_references.py
+   ```
+
+2. When the skill or its references change, bump `version` in both
+   `.claude-plugin/plugin.json` and `.codex-plugin/plugin.json`, so plugin installs pick up the update.

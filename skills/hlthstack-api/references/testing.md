@@ -3,17 +3,27 @@
 # Testing on staging
 
 Use `https://staging-api.hlthstack.io` with your staging credentials. The endpoints below
-exist **only on staging**. They move a booking or order through its lifecycle and fire the
-same webhooks real updates would, so you can test your webhook handler end to end. Never
-call them from production code (production returns 401 or 404).
+move a booking or order through its lifecycle and fire the same webhooks real updates would,
+so you can test your webhook handler end to end.
+
+> [!WARNING]
+> These endpoints exist **only on staging**. Never call them from production code
+> (production returns 401 or 404).
+
+| Service | Method | Path |
+|---|---|---|
+| [Health checkups](#health-checkups) | `POST` | `/api/appointments/{appointment_id}/update_status` |
+| [Consultations](#consultations) | `PATCH` | `/api/consultations/{appointment_id}/update_status` |
+| [ePharmacy](#epharmacy) | `PATCH` | `/api/epharmacy/orders/{order_id}/update_status` |
 
 These calls are also in the *Testing* folder of the
 [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt): choose **Run in
-Postman** and pick the staging environment.
+Postman** and pick the staging environment. When you're done, work through the
+[checklist](#checklist).
 
 ## Health checkups
 
-`POST /api/appointments/{appointment_id}/update_status`
+`POST /api/appointments/{appointment_id}/update_status` with the action to simulate:
 
 ```json
 { "status": "confirm" }
@@ -30,18 +40,18 @@ Postman** and pick the staging environment.
 | `reports_received` | Mark reports received (adds a sample report) |
 | `lab_result` | Create sample lab results (needs `received` and a lab-results webhook URL) |
 
-Success: `{"messages": ["Appointment status updated successfully"]}` (or `"Phlebo has been
-assigned"`, `"Lab result has been created"`). Errors use `{"errors": ["..."]}`: `422` for an
-invalid status or unmet precondition (`Appointment is not confirmed yet`,
-`Appointment is not in received state`), `500` for a transition that isn't allowed
-(`Appointment status cannot be changed from confirmed to confirm`).
+| Result | Response |
+|---|---|
+| Success | `{"messages": ["Appointment status updated successfully"]}` (or `"Phlebo has been assigned"`, `"Lab result has been created"`) |
+| Invalid status or unmet precondition | `422` with `{"errors": ["..."]}`, for example `Appointment is not confirmed yet`, `Appointment is not in received state` |
+| Transition that isn't allowed | `500` with `{"errors": ["..."]}`, for example `Appointment status cannot be changed from confirmed to confirm` |
 
 A typical run: book, `confirm`, `assign_phlebo`, `completed`, `reports_received`,
 `lab_result`.
 
 ## Consultations
 
-`PATCH /api/consultations/{appointment_id}/update_status`
+`PATCH /api/consultations/{appointment_id}/update_status`, for example to reschedule:
 
 ```json
 { "status": "reschedule", "reschedule_time": "2030-01-16T04:30:00Z" }
@@ -55,13 +65,16 @@ A typical run: book, `confirm`, `assign_phlebo`, `completed`, `reports_received`
 | `reschedule` | Move to `reschedule_time` (default: 1 day from now) |
 | `reports_received` | Attach a sample summary and prescription, then move to `received` |
 
-Success: `{"messages": ["Appointment status updated successfully"]}`. Invalid status:
-`422 {"errors": ["Invalid status"]}`. Disallowed transition:
-`422 {"errors": {"messages": ["..."]}}`.
+| Result | Response |
+|---|---|
+| Success | `{"messages": ["Appointment status updated successfully"]}` |
+| Invalid status | `422 {"errors": ["Invalid status"]}` |
+| Disallowed transition | `422 {"errors": {"messages": ["..."]}}` |
 
 ## ePharmacy
 
-`PATCH /api/epharmacy/orders/{order_id}/update_status`
+`PATCH /api/epharmacy/orders/{order_id}/update_status` with the new status and optional
+text and tracking fields:
 
 ```json
 {
@@ -75,12 +88,14 @@ Success: `{"messages": ["Appointment status updated successfully"]}`. Invalid st
 }
 ```
 
-`status` must be an order status (see [epharmacy.md](epharmacy.md#order-statuses)), otherwise
-`422 {"success": false, "message": "Invalid status: ..."}`. The optional text and tracking
-fields are copied into the webhook. The response includes the order's status history
-(`journey`).
+- `status` must be an order status (see [epharmacy.md](epharmacy.md#order-statuses)),
+  otherwise `422 {"success": false, "message": "Invalid status: ..."}`.
+- The optional text and tracking fields are copied into the webhook.
+- The response includes the order's status history (`journey`).
 
 ## Checklist
+
+Before going live, confirm your integration handles:
 
 - [ ] Token refresh before expiry.
 - [ ] Booking, reschedule, cancel (booking-level partial results handled).

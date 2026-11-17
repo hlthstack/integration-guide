@@ -8,9 +8,17 @@
 - **Try it in Postman:** the *Wallet* folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with code samples and **Run in Postman**.
 - **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
 
-Read a member's benefit balances and plan subscriptions. Both endpoints include your
-**company slug** (shared at onboarding) in the path. It must match the entity of the access
-token, otherwise `403 {"error":"Invalid company slug for authenticated partner."}`.
+Read a member's benefit balances and plan subscriptions.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/{company_slug}/customers/wallet` | [Get wallet details](#get-wallet-details): benefit balances for the member and their family |
+| `GET` | `/api/{company_slug}/customers/plans` | [List subscriptions](#list-subscriptions): the member's plan subscriptions |
+
+> [!IMPORTANT]
+> Both endpoints include your **company slug** (shared at onboarding) in the path. It must
+> match the entity of the access token, otherwise
+> `403 {"error":"Invalid company slug for authenticated partner."}`.
 
 ## Get wallet details
 
@@ -24,7 +32,7 @@ token, otherwise `403 {"error":"Invalid company slug for authenticated partner."
 | `customer_plan_id` / `subscription_id` | no | Read one subscription (upcoming and ended ones included) |
 
 Returns the member and their active family, primary member first. Passing a dependant's id
-returns the whole family.
+returns the whole family. Example response:
 
 ```json
 {
@@ -70,16 +78,26 @@ Errors:
 
 `GET /api/{company_slug}/customers/plans?api_customer_id=...` (or `customer_id`)
 
-One row per subscription: `customer_plan_id`, `subscription_id`, `plan_id`, `plan_name`,
-`start_date`, `end_date`, `grace_end_date`, `status` (`active`, `upcoming` or `grace`;
-lapsed subscriptions are left out) and `available_balance`. Unknown member:
-`404 {"error":"Customer not found."}`.
+Returns one row per subscription:
+
+| Field | Notes |
+|---|---|
+| `customer_plan_id` | Send it on bookings and orders to pick this subscription ([below](#paying-from-a-specific-subscription)) |
+| `subscription_id` | Your own id |
+| `plan_id`, `plan_name` | The plan |
+| `start_date`, `end_date`, `grace_end_date` | Subscription dates |
+| `status` | `active`, `upcoming` or `grace`; lapsed subscriptions are left out |
+| `available_balance` | The subscription's available balance |
+
+Unknown member: `404 {"error":"Customer not found."}`.
 
 ## Paying from a specific subscription
 
 When a member holds more than one subscription on a plan, send `customer_plan_id` (from this
 endpoint) or `subscription_id` (your own id) on bookings and pharmacy orders to choose which
-one pays. `customer_plan_id` wins when both are sent.
+one pays.
+
+- `customer_plan_id` wins when both are sent.
 
 - Without `plan_id`, the subscription's plan is used. With `plan_id`, both must match.
 - The subscription must belong to the member the booking is for.

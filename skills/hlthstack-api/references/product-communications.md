@@ -4,11 +4,18 @@
 
 What hlthstack sends your members about pharmacy orders, vision (Lenskart) orders and
 consultations: which message, on which channel, triggered by what. Members receive these
-automatically; you don't call an API to send them. If you embed hlthstack or integrate through
-the API, don't send your own copies of these messages, or members get them twice. To send them
-under your own name and logo, see [white-labelling.md](white-labelling.md).
+automatically; you don't call an API to send them.
 
-Channels:
+> [!IMPORTANT]
+> If you embed hlthstack or integrate through the API, don't send your own copies of these
+> messages, or members get them twice. To send them under your own name and logo, see
+> [white-labelling.md](white-labelling.md).
+
+**On this page:** [1. At a glance](#1-at-a-glance) · [2. Pharmacy](#2-pharmacy) ·
+[3. Vision (Lenskart)](#3-vision-lenskart) · [4. Consultations](#4-consultations) ·
+[5. Notes](#5-notes)
+
+The channels used:
 
 | Channel | Meaning |
 |---|---|
@@ -123,8 +130,9 @@ After payment there is no further message from hlthstack; the order arrives in 3
 Most consultation messages follow the appointment status, so they line up with the webhook
 `status` values in [consultations.md](consultations.md#consultation-statuses): `new`,
 `confirmed`, `rescheduled`, `rejected`, `cancelled`, `noshow`, `completed` and `received`.
-Reminders are time-based and have no webhook. In the tables, E = email, W = WhatsApp, I =
-in-app, P = push, S = SMS.
+Reminders are time-based and have no webhook.
+
+**Channel key** for the tables below: E = email, W = WhatsApp, I = in-app, P = push, S = SMS.
 
 ### 4.1 In-clinic consultation
 

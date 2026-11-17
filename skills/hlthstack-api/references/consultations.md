@@ -9,6 +9,19 @@
 - **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
 - **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#in-clinic-consultation) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#consultations) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#in-clinic-consultation).
 
+**On this page**
+
+1. [Overview](#1-overview)
+2. [Onboarding checklist](#2-onboarding-checklist)
+3. [How a consultation works](#3-how-a-consultation-works)
+4. [The three consultation types](#4-the-three-consultation-types)
+5. [Conventions and common errors](#5-conventions-and-common-errors)
+6. [Booking rules and time windows](#6-booking-rules-and-time-windows)
+7. [API reference](#7-api-reference)
+8. [Webhooks](#8-webhooks)
+9. [Consultation statuses](#9-consultation-statuses)
+10. [Troubleshooting](#10-troubleshooting)
+
 ## 1. Overview
 
 Doctor appointments. Schemas are in [`openapi.yaml`](openapi.yaml) (tag
@@ -60,14 +73,20 @@ The doctor's speciality must match the packages; each consultation provider is o
 
 For `audio_call` there is no link: the doctor phones the `mobile_number` you sent.
 
-**In-clinic** (`inclinic_consultation`): list providers by location, fetch slots, create with
-`service_mode: at_provider_location` and the member's `address`. Once confirmed, the member
-shows the voucher at the clinic.
+**In-clinic** (`inclinic_consultation`):
 
-**Scheduled online** (`specialist_consultation`, `priority_consultation: false`): list
-providers (no location needed), fetch slots, create with `service_mode` `audio_call` or
-`video_call` (no address). For video calls `meeting_link` is `null` until the doctor
-confirms. Optionally upload the member's reports for the doctor.
+1. List providers by location.
+2. Fetch slots.
+3. Create with `service_mode: at_provider_location` and the member's `address`.
+4. Once confirmed, the member shows the voucher at the clinic.
+
+**Scheduled online** (`specialist_consultation`, `priority_consultation: false`):
+
+1. List providers (no location needed).
+2. Fetch slots.
+3. Create with `service_mode` `audio_call` or `video_call` (no address). For video calls
+   `meeting_link` is `null` until the doctor confirms.
+4. Optionally upload the member's reports for the doctor.
 
 **Priority online** (`specialist_consultation`, `priority_consultation: true`):
 
@@ -76,64 +95,75 @@ confirms. Optionally upload the member's reports for the doctor.
 - Available 8 AM-4 PM IST.
 - The consultation is `confirmed` straight away with a placeholder provider
   (`is_default_provider: true`). You may get more than one `confirmed` webhook: the first
-  with the placeholder provider, then one with the assigned doctor (and time). Always show
-  the doctor from the latest event.
+  with the placeholder provider, then one with the assigned doctor (and time).
 - Expect a call from the doctor within about four hours.
 - Using a priority provider for a scheduled booking, or vice versa, is rejected.
 
+> [!IMPORTANT]
+> For priority consultations, always show the doctor from the latest event.
+
 ## 5. Conventions and common errors
 
-**Date-time and time zones.** Send `appointment_date_time` with an offset (`Z` or `+05:30`);
-without one it is read as IST. Responses and webhooks return UTC. Time rules such as the
-priority hours are in IST.
-
-**`service_mode`.** Always send it: `at_provider_location` for in-clinic; `audio_call` or
-`video_call` for specialist. Without it the booking fails with `service mode can't be
-blank`.
-
-**Customers.** Customers follow the same rules as health-checkup bookings: distinct
-alphanumeric `api_customer_id`s, 10-digit `mobile_number`, lowercase `gender`, and a `dob`
-at least 1 year ago. Each entry in `customers` is booked as its own consultation (its own
-`appointment_id`) with the same doctor and slot, under one `booking_id`. The first
-customer's `mobile_number` is used as the contact number for all of them.
+| Topic | Convention |
+|---|---|
+| **Date-time and time zones** | Send `appointment_date_time` with an offset (`Z` or `+05:30`); without one it is read as IST. Responses and webhooks return UTC. Time rules such as the priority hours are in IST. |
+| **`service_mode`** | Always send it: `at_provider_location` for in-clinic; `audio_call` or `video_call` for specialist. Without it the booking fails with `service mode can't be blank`. |
+| **Customers** | Customers follow the same rules as health-checkup bookings: distinct alphanumeric `api_customer_id`s, 10-digit `mobile_number`, lowercase `gender`, and a `dob` at least 1 year ago. |
+| **Several customers** | Each entry in `customers` is booked as its own consultation (its own `appointment_id`) with the same doctor and slot, under one `booking_id`. The first customer's `mobile_number` is used as the contact number for all of them. |
 
 **Error shapes.**
 
-- Reschedule and cancel rule violations: `400 {"errors":{"reschedule_error":["..."]}}` or
-  `400 {"errors":{"cancel_error":["..."]}}`
-- Policy blocks: `422 {"errors":{"messages":["..."]}}`
-- Slot unavailable: `400 {"errors":{"messages":["Selected slot is unavailable, please select different slot"]}}`
-- Upload file problems: `{"message": {"emr": ["..."]}}`
-- Cancel success uses `msg`, not `message`: `{"msg": "Appointment cancelled"}`
+| Case | Shape |
+|---|---|
+| Reschedule and cancel rule violations | `400 {"errors":{"reschedule_error":["..."]}}` or `400 {"errors":{"cancel_error":["..."]}}` |
+| Policy blocks | `422 {"errors":{"messages":["..."]}}` |
+| Slot unavailable | `400 {"errors":{"messages":["Selected slot is unavailable, please select different slot"]}}` |
+| Upload file problems | `{"message": {"emr": ["..."]}}` |
+| Cancel success | Uses `msg`, not `message`: `{"msg": "Appointment cancelled"}` |
 
 ## 6. Booking rules and time windows
 
-- `appointment_date_time` must be in the future (on create and on reschedule).
-- **Notice period:** some doctors need at least 90 minutes' notice: booking closer to the
-  slot returns `Specialist appointments must be booked at least 90 minutes in advance`.
-- **Priority hours:** 8 AM-4 PM IST (`Priority consultation is only available between 8 AM
-  and 4 PM`). A doctor calls within about 4 hours; the priority provider list is empty when
-  no doctor of that speciality is rostered in the next 4 hours.
-- **Reschedule and cancel window:** both are allowed up to **30 minutes** before the slot.
-  Cancellation is not allowed after a no-show or rejection. `rejected` and `noshow`
-  consultations can be rescheduled at any time (the 30-minute rule does not apply), as long
-  as the member's plan still covers the package.
-- **2-hour rule:** some partner doctors need 2 hours' notice, for reschedule and cancel
-  (`Consultations with this partner can only be moved up to 2 hours before the slot.`).
-- **5-minute wait:** at clinics connected through a partner integration, cancel is also
-  refused for 5 minutes after booking (`Please wait N minutes before you cancel this
-  appointment.`).
-- **Co-pay link expiry:** the payment link normally expires at 17:00 IST on the day before
-  the slot; for bookings made close to the slot it can be much shorter, down to about 15
-  minutes. Always use `payment_link_expires_at`. An unpaid booking is never confirmed: it
-  sends no webhook and is dropped after the slot passes.
+| Rule | Details |
+|---|---|
+| **Future time** | `appointment_date_time` must be in the future (on create and on reschedule). |
+| **Notice period** | Some doctors need at least 90 minutes' notice: booking closer to the slot returns `Specialist appointments must be booked at least 90 minutes in advance`. |
+| **Priority hours** | 8 AM-4 PM IST (`Priority consultation is only available between 8 AM and 4 PM`). A doctor calls within about 4 hours; the priority provider list is empty when no doctor of that speciality is rostered in the next 4 hours. |
+| **Reschedule and cancel window** | Both are allowed up to **30 minutes** before the slot. Cancellation is not allowed after a no-show or rejection. `rejected` and `noshow` consultations can be rescheduled at any time (the 30-minute rule does not apply), as long as the member's plan still covers the package. |
+| **2-hour rule** | Some partner doctors need 2 hours' notice, for reschedule and cancel (`Consultations with this partner can only be moved up to 2 hours before the slot.`). |
+| **5-minute wait** | At clinics connected through a partner integration, cancel is also refused for 5 minutes after booking (`Please wait N minutes before you cancel this appointment.`). |
+| **Co-pay link expiry** | See the warning below. |
+
+> [!WARNING]
+> **Co-pay link expiry:** the payment link normally expires at 17:00 IST on the day before
+> the slot; for bookings made close to the slot it can be much shorter, down to about 15
+> minutes. Always use `payment_link_expires_at`. An unpaid booking is never confirmed: it
+> sends no webhook and is dropped after the slot passes.
 
 ## 7. API reference
 
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/api/consultations/inclinic_consultation/providers`, `/api/consultations/specialist_consultation/providers` | [List providers](#71-list-providers) (doctors) |
+| `GET` | `/api/providers/{provider_id}/inclinic_consultation/slots`, `/api/providers/{provider_id}/specialist_consultation/slots` | [Fetch slots](#72-fetch-slots) |
+| `POST` | `/api/consultations/inclinic_consultation`, `/api/consultations/specialist_consultation` | [Create consultation](#73-create-consultation) |
+| `GET` | `/api/consultations/inclinic_consultation/{appointment_id}`, `/api/consultations/specialist_consultation/{appointment_id}` | [Get consultation details](#74-get-consultation-details) |
+| `PATCH` | `/api/consultations/{appointment_id}/reschedule` | [Reschedule](#75-reschedule) |
+| `PATCH` | `/api/consultations/{appointment_id}/cancel` | [Cancel](#76-cancel) |
+| `GET` | `/api/consultations/{appointment_id}/summary_and_prescription` | [Summary and prescription](#77-summary-and-prescription) |
+| `GET` | `/api/consultations/{appointment_id}/voucher` | [Voucher](#78-voucher) (in-clinic) |
+| `POST` | `/api/consultations/{appointment_id}/upload_documents` | [Upload documents](#79-upload-documents) for the doctor |
+
 ### 7.1 List providers
 
-**In-clinic:** `GET /api/consultations/inclinic_consultation/providers?package_ids=...&pincode=...`
-(or `latitude`/`longitude`).
+List the doctors who can see the member for their packages.
+
+| Type | Request |
+|---|---|
+| **In-clinic** | `GET /api/consultations/inclinic_consultation/providers?package_ids=...&pincode=...` (or `latitude`/`longitude`) |
+| **Scheduled specialist** | `GET /api/consultations/specialist_consultation/providers?package_ids=...` (no location needed) |
+| **Priority specialist** | `GET /api/consultations/specialist_consultation/providers?package_ids=...&default_provider=true` |
+
+In-clinic options:
 
 - Optional: `radius`, `page`, `per_page` (max 50), `sort_by` (`fee`, `experience`,
   `distance`, `rating`, `visited_before`), `sort_asc`, `gender` (`Male`, `Female`,
@@ -142,14 +172,12 @@ customer's `mobile_number` is used as the contact number for all of them.
 - Each provider carries doctor details (`doctor_name`, `doctor_specialities`,
   `doctor_fee_details`, `hospital_name`, ...).
 
-**Scheduled specialist:** `GET /api/consultations/specialist_consultation/providers?package_ids=...`
-(no location needed).
-
-**Priority specialist:** `GET /api/consultations/specialist_consultation/providers?package_ids=...&default_provider=true`.
-It returns the priority provider for the package's speciality, or an empty list when no
-doctor of that speciality is rostered in the next 4 hours.
+Priority response: it returns the priority provider for the package's speciality, or an
+empty list when no doctor of that speciality is rostered in the next 4 hours.
 
 ### 7.2 Fetch slots
+
+Get a doctor's bookable slots.
 
 - In-clinic: `GET /api/providers/{provider_id}/inclinic_consultation/slots?package_ids=...`
 - Scheduled specialist: `GET /api/providers/{provider_id}/specialist_consultation/slots?package_ids=...`
@@ -157,6 +185,8 @@ doctor of that speciality is rostered in the next 4 hours.
 Priority bookings have no slots.
 
 ### 7.3 Create consultation
+
+Book a consultation for one or more members.
 
 - In-clinic: `POST /api/consultations/inclinic_consultation`
 - Specialist (scheduled or priority): `POST /api/consultations/specialist_consultation`
@@ -180,15 +210,15 @@ In-clinic request:
 }
 ```
 
-- **In-clinic:** `address` (the member's) is required, including `pincode` (it is not
-  derived from the coordinates here).
-- **Scheduled specialist:** `priority_consultation: false`, `service_mode` `audio_call` or
-  `video_call`, `appointment_date_time`, `provider_id`, `customers` (no address).
-- **Priority specialist:** `priority_consultation: true` and a `provider_id` from the
-  `default_provider=true` list ([7.1](#71-list-providers)). `appointment_date_time` is
-  optional.
-- `service_mode` is required (`service mode can't be blank`); `appointment_date_time` must
-  be in the future; customer rules are in [section 5](#5-conventions-and-common-errors).
+| Type | What to send |
+|---|---|
+| **In-clinic** | `address` (the member's) is required, including `pincode` (it is not derived from the coordinates here). |
+| **Scheduled specialist** | `priority_consultation: false`, `service_mode` `audio_call` or `video_call`, `appointment_date_time`, `provider_id`, `customers` (no address). |
+| **Priority specialist** | `priority_consultation: true` and a `provider_id` from the `default_provider=true` list ([7.1](#71-list-providers)). `appointment_date_time` is optional. |
+
+For every type, `service_mode` is required (`service mode can't be blank`);
+`appointment_date_time` must be in the future; customer rules are in
+[section 5](#5-conventions-and-common-errors).
 
 Response:
 
@@ -204,36 +234,40 @@ Response:
 }
 ```
 
-`status: "confirmed"` means the booking was paid in full from the member's benefit. It is
-not the doctor's confirmation: each consultation's own state is
-`customers[].consultation_status`, usually `new`, then `confirmed` by webhook when the
-doctor or clinic confirms.
+Response notes:
 
-When the member must pay part of the fee, `status` is absent, `consultation_status` is
-`payment_pending`, and the response carries `payment_link` and `payment_link_expires_at`.
-Send the member to the link. The booking is confirmed after payment, and the usual webhooks
-follow. For link expiry and unpaid bookings, see
-[section 6](#6-booking-rules-and-time-windows).
+- `status: "confirmed"` means the booking was paid in full from the member's benefit. It is
+  not the doctor's confirmation: each consultation's own state is
+  `customers[].consultation_status`, usually `new`, then `confirmed` by webhook when the
+  doctor or clinic confirms.
+- When the member must pay part of the fee, `status` is absent, `consultation_status` is
+  `payment_pending`, and the response carries `payment_link` and `payment_link_expires_at`.
+  Send the member to the link. The booking is confirmed after payment, and the usual webhooks
+  follow. For link expiry and unpaid bookings, see
+  [section 6](#6-booking-rules-and-time-windows).
 
 Errors:
 
-- `service mode can't be blank`
-- `Specialist appointments must be booked at least 90 minutes in advance` (doctors that need
-  90 minutes' notice)
-- `The selected slot is not available for this doctor` (for those doctors, a slot that is
-  already taken)
-- `Priority consultation is only available between 8 AM and 4 PM`
-- A priority provider used for a scheduled booking, or vice versa, is rejected.
+| Message | Cause |
+|---|---|
+| `service mode can't be blank` | `service_mode` missing |
+| `Specialist appointments must be booked at least 90 minutes in advance` | Doctors that need 90 minutes' notice |
+| `The selected slot is not available for this doctor` | For those doctors, a slot that is already taken |
+| `Priority consultation is only available between 8 AM and 4 PM` | Priority booked outside those hours |
+| The request is rejected | A priority provider used for a scheduled booking, or vice versa |
 
 ### 7.4 Get consultation details
 
-- In-clinic: `GET /api/consultations/inclinic_consultation/{appointment_id}`, including
-  `hospital_name`, `hospital_location`, `hospital_address`, `latitude`, `longitude`.
-- Specialist: `GET /api/consultations/specialist_consultation/{appointment_id}`. For video
-  calls the response (and webhooks) include `meeting_link`, which is `null` until the
-  doctor confirms. For audio calls the doctor phones the `mobile_number` you sent.
+Read a consultation's current details.
+
+| Type | Request | Notes |
+|---|---|---|
+| In-clinic | `GET /api/consultations/inclinic_consultation/{appointment_id}` | Includes `hospital_name`, `hospital_location`, `hospital_address`, `latitude`, `longitude` |
+| Specialist | `GET /api/consultations/specialist_consultation/{appointment_id}` | For video calls the response (and webhooks) include `meeting_link`, which is `null` until the doctor confirms. For audio calls the doctor phones the `mobile_number` you sent |
 
 ### 7.5 Reschedule
+
+Move a consultation to a new time with the same doctor.
 
 `PATCH /api/consultations/{appointment_id}/reschedule` with
 `{"appointment_date_time": "..."}` (must be in the future). Same doctor only (to change
@@ -242,31 +276,36 @@ doctor, cancel and book again). Timing rules are in
 
 Errors:
 
-- Rule violations: `400 {"errors":{"reschedule_error":["..."]}}`
-- Policy blocks: `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this
-  partner can only be moved up to 2 hours before the slot.` or `The company plan this
-  appointment was booked under is no longer active.` These are final for the booking.
-- Slot unavailable: `400 {"errors":{"messages":["Selected slot is unavailable, please select different slot"]}}`
-- `Doctor not found`, or the speciality is no longer on the plan: cancel and book again.
+| Error | Response | What to do |
+|---|---|---|
+| Rule violations | `400 {"errors":{"reschedule_error":["..."]}}` | See [section 6](#6-booking-rules-and-time-windows) |
+| Policy blocks | `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this partner can only be moved up to 2 hours before the slot.` or `The company plan this appointment was booked under is no longer active.` | These are final for the booking |
+| Slot unavailable | `400 {"errors":{"messages":["Selected slot is unavailable, please select different slot"]}}` | Pick another slot |
+| Doctor or speciality gone | `Doctor not found`, or the speciality is no longer on the plan | Cancel and book again |
 
 ### 7.6 Cancel
 
+Cancel a consultation.
+
 `PATCH /api/consultations/{appointment_id}/cancel` (no body). Success is
-`{"msg": "Appointment cancelled"}` (note `msg`, not `message`). Amounts paid from the
-benefit or by the member are refunded automatically, an unpaid payment link is cancelled,
-and a `cancelled` webhook follows. Timing rules are in
-[section 6](#6-booking-rules-and-time-windows).
+`{"msg": "Appointment cancelled"}` (note `msg`, not `message`).
+
+- Amounts paid from the benefit or by the member are refunded automatically.
+- An unpaid payment link is cancelled.
+- A `cancelled` webhook follows.
+- Timing rules are in [section 6](#6-booking-rules-and-time-windows).
 
 Errors:
 
-- Rule violations: `400 {"errors":{"cancel_error":["..."]}}`
-- Policy blocks: `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this
-  partner can only be moved up to 2 hours before the slot.` or the 5-minute wait
-  (`Please wait N minutes before you cancel this appointment.`). Except for the wait, these
-  are final for the booking.
-- `Doctor not found`, or the speciality is no longer on the plan: cancel and book again.
+| Error | Response | What to do |
+|---|---|---|
+| Rule violations | `400 {"errors":{"cancel_error":["..."]}}` | See [section 6](#6-booking-rules-and-time-windows) |
+| Policy blocks | `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this partner can only be moved up to 2 hours before the slot.` or the 5-minute wait (`Please wait N minutes before you cancel this appointment.`) | Except for the wait, these are final for the booking |
+| Doctor or speciality gone | `Doctor not found`, or the speciality is no longer on the plan | Cancel and book again |
 
 ### 7.7 Summary and prescription
+
+Get the doctor's summary and prescription after the call.
 
 `GET /api/consultations/{appointment_id}/summary_and_prescription`, after the call.
 
@@ -274,33 +313,43 @@ Errors:
   prescription but no summary; `doctor_prescriptions` is empty when there is none.
 - A 404 (`Consultation not found`) means no consultation record yet; try again after
   `completed`.
-- File links expire after a few minutes: download them, don't store them.
 - In-clinic consultations have no API summary.
 
+> [!WARNING]
+> File links expire after a few minutes: download them, don't store them.
+
 ### 7.8 Voucher
+
+Download the in-clinic voucher.
 
 `GET /api/consultations/{appointment_id}/voucher` once confirmed: the voucher PDF
 (`<appointment_id>.pdf`) the member shows at the clinic. In-clinic only.
 
 ### 7.9 Upload documents
 
+Share files with the doctor before the call.
+
 `POST /api/consultations/{appointment_id}/upload_documents`: optionally upload the member's
 reports for the doctor (scheduled specialist consultations). Multipart, `files[][name]` +
 `files[][value]` pairs; PDF, JPEG or PNG.
 
-- `Invalid file format` means the form is wrong, not the file type.
-- File problems (wrong type, password-protected or unreadable PDF, virus found) return
-  `{"message": {"emr": ["..."]}}`.
+Errors:
+
+| Response | Cause |
+|---|---|
+| `Invalid file format` | The form is wrong, not the file type |
+| `{"message": {"emr": ["..."]}}` | File problems (wrong type, password-protected or unreadable PDF, virus found) |
 
 ## 8. Webhooks
 
 Typical webhook sequences:
 
-- In-clinic: `new` → `confirmed` → `completed`.
-- Scheduled online: `new` → `confirmed` (with `meeting_link` for video) → `completed`.
-- Priority: `new` → `confirmed` (placeholder provider) → `confirmed` again when a doctor is
-  assigned → `completed`.
-- After a reschedule: `rescheduled`, then `confirmed`.
+| Type | Sequence |
+|---|---|
+| In-clinic | `new` → `confirmed` → `completed` |
+| Scheduled online | `new` → `confirmed` (with `meeting_link` for video) → `completed` |
+| Priority | `new` → `confirmed` (placeholder provider) → `confirmed` again when a doctor is assigned → `completed` |
+| After a reschedule | `rescheduled`, then `confirmed` |
 
 Any of these can instead end in `rejected` (reason in `comment`), `noshow` or `cancelled`.
 
@@ -310,8 +359,10 @@ Any of these can instead end in `rejected` (reason in `comment`), `noshow` or `c
 - A cancel is followed by a `cancelled` webhook.
 - Webhooks return times in UTC and include `meeting_link` for video calls (`null` until the
   doctor confirms).
-- Summaries and prescriptions can arrive on `completed` or `received`: read `summary` and
-  `doctor_prescriptions` on every event.
+
+> [!IMPORTANT]
+> Summaries and prescriptions can arrive on `completed` or `received`: read `summary` and
+> `doctor_prescriptions` on every event.
 
 Payload fields are described in [webhooks.md](webhooks.md#appointment-and-consultation-payload).
 
