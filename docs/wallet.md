@@ -1,5 +1,11 @@
 # Wallet and subscriptions
 
+**Resources for this service**
+
+- **API reference:** [Wallet on developers.hlthstack.io](https://developers.hlthstack.io/#tag/Wallet): every endpoint with its parameters, responses and errors.
+- **Try it in Postman:** the *Wallet* folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with code samples and **Run in Postman**.
+- **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
+
 Read a member's benefit balances and plan subscriptions. Both endpoints include your
 **company slug** (shared at onboarding) in the path. It must match the entity of the access
 token, otherwise `403 {"error":"Invalid company slug for authenticated partner."}`.

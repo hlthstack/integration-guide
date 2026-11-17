@@ -2,6 +2,13 @@
 
 # Health checkups and lab tests
 
+**Resources for this service**
+
+- **API reference:** [Health Checkups on developers.hlthstack.io](https://developers.hlthstack.io/#tag/Health-Checkups): every endpoint with its parameters, responses and errors.
+- **Try it in Postman:** the *Health Checkups* folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with code samples and **Run in Postman**.
+- **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
+- **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#book-a-health-checkup-end-to-end) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#book-a-health-checkup) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#book-a-health-checkup-end-to-end).
+
 ## 1. Overview
 
 Book health checks, lab tests, dental and vision checkups and vaccinations at a provider

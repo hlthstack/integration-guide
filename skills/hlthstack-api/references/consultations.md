@@ -2,6 +2,13 @@
 
 # Consultations
 
+**Resources for this service**
+
+- **API reference:** [Consultations on developers.hlthstack.io](https://developers.hlthstack.io/#tag/Consultations): every endpoint with its parameters, responses and errors.
+- **Try it in Postman:** the *Consultations* folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with code samples and **Run in Postman**.
+- **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#api) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#api-surface) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#api).
+- **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#in-clinic-consultation) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#consultations) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#in-clinic-consultation).
+
 ## 1. Overview
 
 Doctor appointments. Schemas are in [`openapi.yaml`](openapi.yaml) (tag

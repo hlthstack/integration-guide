@@ -1,5 +1,12 @@
 # Pre-registration
 
+**Resources for this service**
+
+- **API reference:** [Pre-registration on developers.hlthstack.io](https://developers.hlthstack.io/#tag/Pre-registration): every endpoint with its parameters, responses and errors.
+- **Try it in Postman:** the *Pre-registration* folder of the [Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt), with code samples and **Run in Postman**.
+- **SDK methods:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/sdk-integration.md#pre-registration) · [Python](https://github.com/hlthstack/python/blob/main/docs/sdk-integration.md#pre-registration) · [Java](https://github.com/hlthstack/java/blob/main/docs/sdk-integration.md#pre-registration).
+- **Calling the API without an SDK:** [JavaScript](https://github.com/hlthstack/js/blob/main/docs/api-integration.md#pre-registration) · [Python](https://github.com/hlthstack/python/blob/main/docs/api-integration.md#pre-registration) · [Java](https://github.com/hlthstack/java/blob/main/docs/api-integration.md#pre-registration).
+
 ## 1. Overview
 
 Register your members (employees) and their dependants with hlthstack in bulk, update them,
