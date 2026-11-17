@@ -16,6 +16,14 @@ import sys
 from pathlib import Path
 
 PRE_REQUEST = r"""
+// An id parameter set to an environment variable that has no value is left out of the request.
+const emptyVars = [];
+pm.request.url.query.each(function (q) {
+  const m = /^{{(\w+)}}$/.exec(q.value || '');
+  if (m && !q.disabled && !pm.variables.get(m[1])) emptyVars.push(q.key);
+});
+emptyVars.forEach(function (key) { pm.request.url.query.remove(key); });
+
 // Fetches and caches the token each call needs, so you never paste one by hand.
 const path = pm.request.url.getPath();
 if (path.endsWith('/api/get-access-token') || path.endsWith('/api/pre_registration/access-token')) return;
@@ -70,6 +78,31 @@ def walk(items):
 
 ENTITY_HEADERS = {"API-ENTITY-ID": "{{entityId}}", "API-SECRET-KEY": "{{entitySecretKey}}"}
 
+# Parameters partners replace with their own values: set once in the environment.
+ID_VARS = {
+    ("query", "package_ids"): "packageIds",
+    ("query", "plan_id"): "planId",
+    ("path", "provider_id"): "providerId",
+    ("path", "booking_id"): "bookingId",
+    ("query", "booking_id"): "bookingId",
+    ("path", "appointment_id"): "appointmentId",
+    ("query", "appointment_id"): "appointmentId",
+}
+# Defaults for those variables (the spec's examples); planId stays empty.
+ID_DEFAULTS = {"planId": ""}
+
+# After a booking or consultation is created, keep its ids for the follow-up requests.
+CAPTURE_IDS = r"""
+if (pm.response.code === 200) {
+  const body = pm.response.json();
+  if (body.booking_id) pm.environment.set('bookingId', body.booking_id);
+  const first = (body.customers || [])[0] || {};
+  if (first.appointment_id) pm.environment.set('appointmentId', first.appointment_id);
+}
+""".strip()
+CREATE_PATHS = {"/api/appointments", "/api/consultations/inclinic_consultation",
+                "/api/consultations/specialist_consultation"}
+
 
 def example_value(param):
     schema = param.get("schema") or {}
@@ -114,8 +147,21 @@ def apply_spec(req, spec):
         q["value"] = as_text(example_value(p))
         # pincode is optional only because coordinates can replace it; the guides lead with it.
         q["disabled"] = not (p.get("required", False) or q["key"] == "pincode")
+        var = ID_VARS.get(("query", q["key"]))
+        if var:
+            ID_DEFAULTS.setdefault(var, q["value"])
+            q["value"] = "{{%s}}" % var
+            if var == "planId":
+                q["disabled"] = False  # sent when planId is set; dropped when it is empty
     for v in url.get("variable", []):
         v["value"] = as_text(example_value(params.get(("path", v["key"]), {})))
+        var = ID_VARS.get(("path", v["key"]))
+        if var:
+            ID_DEFAULTS.setdefault(var, v["value"])
+            v["value"] = "{{%s}}" % var
+    if method == "post" and path in CREATE_PATHS:
+        req.setdefault("event", []).append(
+            {"listen": "test", "script": {"type": "text/javascript", "exec": CAPTURE_IDS.splitlines()}})
     for h in req["request"].get("header", []):
         if h["key"] in ENTITY_HEADERS:
             h["value"], h["disabled"] = ENTITY_HEADERS[h["key"]], True
@@ -135,7 +181,7 @@ def main() -> int:
     c["info"]["description"] = (
         "Generated from the hlthstack OpenAPI spec "
         "(https://github.com/hlthstack/integration-guide). Pick the Staging or Production "
-        "environment and fill in the credentials hlthstack issued you; tokens are fetched for you."
+        "environment, fill in the credentials hlthstack issued you, and set packageIds, planId and providerId to your own values; tokens are fetched for you, and a created booking's ids are saved for the follow-up requests."
     )
     for req in walk(c["item"]):
         raw = json.dumps(req)
@@ -175,7 +221,7 @@ def main() -> int:
                 {"key": "entitySecretKey", "value": "", "type": "secret", "enabled": True},
                 {"key": "accessToken", "value": "", "type": "secret", "enabled": True},
                 {"key": "preregToken", "value": "", "type": "secret", "enabled": True},
-            ],
+            ] + [{"key": k, "value": v, "type": "default", "enabled": True} for k, v in sorted(ID_DEFAULTS.items())],
             "_postman_variable_scope": "environment",
         }
         (out / f"hlthstack-{name.lower()}.postman_environment.json").write_text(json.dumps(env, indent=2), encoding="utf-8")

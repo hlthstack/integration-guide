@@ -22,7 +22,7 @@ shape and status code, see [errors.md](errors.md).
 | 401 `HTTP Token: Access denied.` | The access token is missing, malformed or expired. | Get a new token and retry once. Refresh the token before it expires instead of waiting for a 401. |
 | 401 `Wrong credentials` | The API username or password is wrong, or belongs to the other environment. | Use the credentials issued for that environment. Staging credentials don't work in production. |
 | 400 `The entity is not enabled for API booking.` | Your account isn't set up for API bookings yet. | Ask your hlthstack contact to enable API booking. |
-| 403 `this service is not enabled for you` | The service you requested isn't part of your plan. | Call only the services agreed at onboarding, or ask your hlthstack contact to add the service. |
+| 403 `this service is not enabled for you` | No `plan_id` was sent, so the base plan was used, or the service isn't part of your plan. | Send the `plan_id` issued with your packages. If that doesn't help, call only the services agreed at onboarding, or ask your hlthstack contact to add the service. |
 | 404 `customer not found: <id>` | The customer id isn't registered under your account, or comes from the other environment. | Register the customer first and send the id exactly as registered. |
 
 ## 2. Packages and providers
@@ -32,7 +32,7 @@ shape and status code, see [errors.md](errors.md).
 | 400 `invalid package_ids` · `Invalid package ids: <id> (package not found)` | The package id doesn't exist for your account. | Use only the package ids shared at onboarding. |
 | 400 `Invalid package ids: <id> (not tagged to <benefit> benefit)` | The package is valid but doesn't belong to the service you are calling. | Send each package id only with the service it was issued for. |
 | 400 `(package is inactive)` · `(benefit tagging is inactive)` · `(benefit tagging end date expired on <date>)` | The package has been retired, or its contract period has ended. | Stop sending that id and ask your hlthstack contact for the replacement. Keep package ids in configuration, not in code. |
-| 400 `package_ids: can't be blank, should be an integer array` | `package_ids` is missing or sent as text. | Send `package_ids` as an array of numbers. |
+| 400 `package_ids: can't be blank, should be an integer array` | `package_ids` is missing or in the wrong form. | In a query string send comma-separated numbers (`package_ids=1001,1002`); in a JSON body send an array of numbers. |
 | 400 `service_name: is not a valid service_name` | The service name is missing or misspelt. | Use the exact service names in the [API reference](https://developers.hlthstack.io). |
 | 400 `pincode: is the wrong length (should be 6 characters)` · `latitude: can't be blank` | Location details are missing or malformed in the provider search. | Send a 6-digit pincode, or latitude and longitude as decimals. |
 | 400 `The provider is temporarily unserviceable` | The provider has been paused since you last listed providers. | List providers again for every booking and offer the member another provider. |

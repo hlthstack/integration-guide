@@ -10,7 +10,13 @@ and lab tests, in-clinic and online doctor consultations, and ePharmacy orders f
 members, check their benefit wallets, register your members and their dependants in bulk,
 and receive status updates by webhook.
 
-**New here?** Start with [Getting started](docs/getting-started.md).
+## Who is this for?
+
+| You are | Start with |
+|---|---|
+| A product or business lead | [hlthstack for business teams](docs/for-business-teams.md): what members get, the ways to integrate, what your team decides and provides, and the path to go-live, without code. |
+| A developer | [Getting started](docs/getting-started.md): from access request to go-live, including the member-app (PWA) embed track. |
+| Anyone meeting an unfamiliar term | The [glossary](docs/glossary.md). |
 
 ## Start here
 
@@ -106,17 +112,21 @@ Book a health checkup on staging with curl, from token to booking:
 
 ```bash
 BASE=https://staging-api.hlthstack.io
+# Replace these with your own values
+PACKAGE_ID="<a package id from onboarding>"
+PLAN_ID="<the plan id issued with it>"
+PINCODE=500081   # example
 
 # 1. Get an access token (valid 1 hour)
-TOKEN=$(curl -s -u "$HS_USERNAME:$HS_PASSWORD" "$BASE/api/get-access-token" | jq -r .access_token)
+TOKEN=$(curl -s -u "$HLTHSTACK_USERNAME:$HLTHSTACK_PASSWORD" "$BASE/api/get-access-token" | jq -r .access_token)
 
-# 2. Find providers for a health-check package near a pincode
-curl -s "$BASE/api/providers?service_name=ahc&package_ids=1001&pincode=500081" \
-  -H "Authorization: Bearer $TOKEN"
+# 2. Find providers for a health-check package near a pincode, and keep the first one
+PROVIDER_ID=$(curl -s "$BASE/api/providers?service_name=ahc&package_ids=$PACKAGE_ID&pincode=$PINCODE&plan_id=$PLAN_ID" \
+  -H "Authorization: Bearer $TOKEN" | jq -r '.providers[0].provider_id')
 
-# 3. Get slots for one provider for the next 14 days (add &booking_date=YYYY-MM-DD for one day)
-curl -s "$BASE/api/providers/1001/ahc/slots?package_ids=1001&pincode=500081" \
-  -H "Authorization: Bearer $TOKEN"
+# 3. Get slots for that provider for the next 14 days (add &booking_date=YYYY-MM-DD for one day)
+curl -s "$BASE/api/providers/$PROVIDER_ID/ahc/slots?package_ids=$PACKAGE_ID&pincode=$PINCODE" \
+  -H "Authorization: Bearer $TOKEN" | jq '.booking_slots'
 
 # 4. Book: set appointment_date_time to a utc_slot_time from step 3
 curl -s -X POST "$BASE/api/appointments" \
@@ -124,12 +134,13 @@ curl -s -X POST "$BASE/api/appointments" \
   -d '{
     "service_name": "ahc",
     "appointment_type": "inclinic",
-    "provider_id": 1001,
+    "plan_id": "'"$PLAN_ID"'",
+    "provider_id": '"$PROVIDER_ID"',
     "appointment_date_time": "2030-01-15T02:30:00Z",
     "customers": [{
       "name": "Jane Doe", "dob": "1990-08-24", "gender": "female",
       "mobile_number": "9999999999", "api_customer_id": "CUST1001",
-      "package_ids": [1001]
+      "package_ids": ['"$PACKAGE_ID"']
     }]
   }'
 
@@ -166,9 +177,11 @@ and each folder of the [Postman docs](https://documenter.getpostman.com/view/327
 
 | Guide | What it covers | Read it when |
 |---|---|---|
+| [hlthstack for business teams](docs/for-business-teams.md) | A no-code overview for product and business leads: the services members get, the three ways to integrate (embed the member app, build with the API, or both) and their trade-offs, what your team decides and provides, onboarding to go-live, what members experience, support and security. | You are deciding whether and how to integrate, or briefing your team. |
 | [Getting started](docs/getting-started.md) | The path from requesting access to going live: what you receive at onboarding, first calls on staging (Postman, curl or an SDK), building flows, webhooks, testing and the go-live checklist. | You are new to hlthstack, or planning an integration. |
 | [Authentication](docs/authentication.md) | Exchanging your username and password for a 1-hour access token, sending it on every call, the extra headers for partners serving several employers (entities), and keeping credentials safe. | Before your first call. |
 | [Environments](docs/environments.md) | Staging and production addresses, which credentials and ids differ between them, and recommended client timeouts. | Setting up configuration, and again before go-live. |
+| [Glossary](docs/glossary.md) | Plain-language meanings of the terms used in these docs, from access token and AHC to webhook and white-labelling. | You meet an unfamiliar term. |
 
 ### Book and manage services
 

@@ -287,7 +287,8 @@ Errors:
 
 Cancel a consultation.
 
-`PATCH /api/consultations/{appointment_id}/cancel` (no body). Success is
+`PATCH /api/consultations/{appointment_id}/cancel` (no body; unlike health-checkup cancel, no `reason` is
+accepted). Success is
 `{"msg": "Appointment cancelled"}` (note `msg`, not `message`).
 
 - Amounts paid from the benefit or by the member are refunded automatically.
@@ -301,7 +302,6 @@ Errors:
 |---|---|---|
 | Rule violations | `400 {"errors":{"cancel_error":["..."]}}` | See [section 6](#6-booking-rules-and-time-windows) |
 | Policy blocks | `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this partner can only be moved up to 2 hours before the slot.` or the 5-minute wait (`Please wait N minutes before you cancel this appointment.`) | Except for the wait, these are final for the booking |
-| Doctor or speciality gone | `Doctor not found`, or the speciality is no longer on the plan | Cancel and book again |
 
 ### 7.7 Summary and prescription
 

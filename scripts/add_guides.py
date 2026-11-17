@@ -30,6 +30,7 @@ AREA_GUIDES = {
 # Documentation-only sections: (name, guide, position). "start" sections come before the API
 # areas, "end" sections after.
 EXTRA_SECTIONS = [
+    ("For business teams", "for-business-teams.md", "start"),
     ("Getting started", "getting-started.md", "start"),
     ("Environments", "environments.md", "start"),
     ("Webhooks guide", "webhooks.md", "end"),
@@ -38,7 +39,48 @@ EXTRA_SECTIONS = [
     ("Product communications", "product-communications.md", "end"),
     ("White-labelling", "white-labelling.md", "end"),
     ("FAQ", "faq.md", "end"),
+    ("Glossary", "glossary.md", "end"),
 ]
+SITE = "https://developers.hlthstack.io/"
+
+
+def gh_slug(heading: str) -> str:
+    """The anchor GitHub gives a heading."""
+    return re.sub(r"[^\w\- ]", "", heading.strip().lower().replace("`", "")).replace(" ", "-")
+
+
+def site_slug(heading: str) -> str:
+    """The anchor Redoc gives a top-level (##) heading inside a section."""
+    return re.sub(r"[^A-Za-z0-9.\- ]", "", heading.replace("`", "").strip()).replace(" ", "-")
+
+
+def site_anchors(name: str) -> dict:
+    """GitHub anchors in a guide -> the Redoc anchor of the ## section that holds them."""
+    anchors, current, pending = {}, "", []
+    text = re.sub(r"```.*?```", "", (ROOT / "docs" / name).read_text(encoding="utf-8"), flags=re.S)
+    for line in text.splitlines():
+        a = re.match(r'<a id="([^"]+)"></a>', line)
+        h = re.match(r"(#{2,6}) (.+)", line)
+        if a:
+            pending.append(a.group(1))
+        elif h:
+            if len(h.group(1)) == 2:
+                current = site_slug(h.group(2))
+            for anchor in pending + [gh_slug(h.group(2))]:
+                anchors.setdefault(anchor, current)
+            pending = []
+    return anchors
+
+
+def site_link(guide: str, anchor: str):
+    """The docs-site URL for a link to a guide (and anchor), or None if it isn't on the site."""
+    tag = next((t for t, g in AREA_GUIDES.items() if g == guide), None) or next(
+        (n for n, g, _ in EXTRA_SECTIONS if g == guide), None)
+    if not tag or not (ROOT / "docs" / guide).exists():
+        return None
+    url = f"{SITE}#tag/{tag.replace(' ', '-')}"
+    section = site_anchors(guide).get(anchor) if anchor else None
+    return f"{url}/{section}" if section else url
 
 
 def guide_body(name: str) -> str:
@@ -51,12 +93,16 @@ def guide_body(name: str) -> str:
 
     def absolute(m: re.Match) -> str:
         target = m.group(2)
-        if target.startswith("#"):
-            # Headings get no anchors on the site or in Postman; send in-page links to GitHub.
-            return f"{m.group(1)}({REPO}/docs/{name}{target})"
         if re.match(r"[a-z]+:", target):
             return m.group(0)
         path, _, anchor = target.partition("#")
+        # Links between guides go to the matching section of the docs site (also from Postman).
+        if path == "" or (path.endswith(".md") and "/" not in path):
+            site = site_link(path or name, anchor)
+            if site:
+                return f"{m.group(1)}({site})"
+        if path == "":
+            return f"{m.group(1)}({REPO}/docs/{name}#{anchor})"
         url = f"{REPO}/{(Path('docs') / path).as_posix()}"
         url = re.sub(r"/docs/\.\./", "/", url)
         return f"{m.group(1)}({url}{'#' + anchor if anchor else ''})"

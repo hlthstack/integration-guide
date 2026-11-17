@@ -37,8 +37,9 @@ are in [`openapi.yaml`](openapi.yaml) (tag **Health Checkups**).
 
 - **Services:** `service_name` values commonly used: `ahc` (health checks / diagnostics),
   `dental`, `vision`, `flu_vaccination`. The full list is in the API reference.
-- **Plans:** `plan_id` is optional on a booking and defaults to the base plan.
-  `customer_plan_id` / `subscription_id` pick which subscription pays (see
+- **Plans:** send the `plan_id` issued with your packages. Without it the entity's base plan
+  is used, and a service that isn't on the base plan returns `403 this service is not
+  enabled for you`. `customer_plan_id` / `subscription_id` pick which subscription pays (see
   [wallet.md](wallet.md)).
 - **Booking types:** `inclinic` (at the provider) or `home_collection` (at the member's
   address); see [section 4](#4-booking-types).
@@ -47,7 +48,8 @@ are in [`openapi.yaml`](openapi.yaml) (tag **Health Checkups**).
 
 - **Package ids**: shared at onboarding; you send them as `package_ids`.
 - **Enabled services**: each `service_name` you call must be enabled on your plan.
-- **Plan ids**: only if you book on a plan other than the base plan (`plan_id`).
+- **Plan ids**: issued with your package ids. Send `plan_id` on provider searches and
+  bookings; without it the base plan is used.
 - **Webhook receiver**: to track bookings by webhook ([webhooks.md](webhooks.md)).
 - **Lab results**: `GET /api/appointments/{id}/lab_results` is enabled on request.
 
@@ -170,7 +172,7 @@ Find providers that deliver a service and packages near a location.
 | `pincode` | yes, or `latitude` + `longitude` | |
 | `radius` | no | km, default 100 |
 | `page` / `per_page` | no | `per_page` max 50 |
-| `plan_id` | no | |
+| `plan_id` | no | Send the plan id issued with the package; without it the base plan is used |
 | `auto_allocate_provider` | no | Home collection: let hlthstack pick the provider |
 
 Response notes:
@@ -208,7 +210,7 @@ Book one or more members into one provider slot.
 | `service_name` | yes | e.g. `ahc` |
 | `customers[]` | yes | One entry per member, see below |
 | `address` | home collection | Required: `address_line_one`, `address_line_two` (each up to 254 chars), `city`, `state`, `country` (India), `latitude`, `longitude` (non-negative decimals). Optional: `pincode` (6 digits, not starting with 0; derived from the coordinates when omitted). The address lines, city, state and country must not contain any other 6-digit pincode |
-| `plan_id` | no | Defaults to the base plan |
+| `plan_id` | no | Send the plan id issued with the package; without it the base plan is used |
 | `customer_plan_id` / `subscription_id` | no | Pick which subscription pays, see [wallet.md](wallet.md) |
 | `api_partner_order_id` | no | Your order reference (a per-customer value overrides it) |
 
@@ -401,7 +403,7 @@ Build status handling to tolerate statuses you don't recognise.
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `403` `this service is not enabled for you` | The `service_name` isn't enabled on your plan | Use a service enabled on your plan |
+| `403` `this service is not enabled for you` | No `plan_id` (so the base plan is used) or the wrong one, or the `service_name` isn't on your plan | Send the `plan_id` issued with the package; otherwise use a service enabled on your plan |
 | `400` `Booking date ... is before the provider's earliest available date ...` | `booking_date` is before the [first bookable date](#first-bookable-date) | Compute the date from `slot_lead_time` in the provider's `timezone` |
 | `appointment time is outside provider booking hours` | The slot doesn't start between 06:00 and 20:59 IST (22:59 at some providers); a time without `Z` or an offset is read as UTC | Book with the slot's `utc_slot_time` |
 | `provider requires at least one day's notice` | A time today at a provider with `slot_lead_time` of 1 or more | Pick a later date |

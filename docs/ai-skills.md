@@ -296,7 +296,7 @@ explicitly, mention `@hlthstack` (plugin) or select the skill from **+** in the 
 ## Credentials and safety
 
 > [!CAUTION]
-> Keep API credentials in environment variables (for example `HS_USERNAME`, `HS_PASSWORD`) or
+> Keep API credentials in environment variables (for example `HLTHSTACK_USERNAME`, `HLTHSTACK_PASSWORD`) or
 > your secret manager. Don't paste them into the chat.
 
 - The skill tells the assistant to read credentials from the environment and never print or

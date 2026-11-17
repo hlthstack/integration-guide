@@ -20,7 +20,7 @@ Tokens and keys sent in these headers are server-side secrets: see
 issued to you.
 
 ```bash
-curl -u "$HS_USERNAME:$HS_PASSWORD" https://api.hlthstack.io/api/get-access-token
+curl -u "$HLTHSTACK_USERNAME:$HLTHSTACK_PASSWORD" https://api.hlthstack.io/api/get-access-token
 ```
 
 The response:
