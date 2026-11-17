@@ -51,12 +51,19 @@ def main() -> int:
         method="PUT",
         headers={"X-Api-Key": key, "Content-Type": "application/json"},
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
-            body = json.load(resp)
-    except urllib.error.HTTPError as e:
-        # Postman's error body names the problem; it never contains the key.
-        raise SystemExit(f"Postman update failed: HTTP {e.code} {e.read().decode('utf-8', 'replace')[:500]}")
+    # The collection carries every guide, so the upload can take a while; retry once on a timeout.
+    for attempt in (1, 2):
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                body = json.load(resp)
+            break
+        except urllib.error.HTTPError as e:
+            # Postman's error body names the problem; it never contains the key.
+            raise SystemExit(f"Postman update failed: HTTP {e.code} {e.read().decode('utf-8', 'replace')[:500]}")
+        except (TimeoutError, urllib.error.URLError) as e:
+            if attempt == 2:
+                raise SystemExit(f"Postman update failed: {e}")
+            print(f"Postman update timed out ({e}); retrying")
     print(f"updated Postman collection {body.get('collection', {}).get('uid', COLLECTION_UID)}")
     return 0
 

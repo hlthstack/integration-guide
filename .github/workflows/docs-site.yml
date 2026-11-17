@@ -47,6 +47,9 @@ jobs:
       # collection differs from the one on the docs site; a manual run always updates.
       - name: Update the published Postman collection
         if: github.event_name != 'pull_request'
+        # A Postman outage shouldn't stop the docs site from deploying; the step still shows as failed.
+        continue-on-error: true
+        timeout-minutes: 15
         env:
           POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
           PREVIOUS: ${{ github.event_name == 'push' && '--previous https://developers.hlthstack.io/postman/hlthstack.postman_collection.json' || '' }}
