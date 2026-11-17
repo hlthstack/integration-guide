@@ -6,7 +6,7 @@ same webhooks real updates would, so you can test your webhook handler end to en
 call them from production code (production returns 401 or 404).
 
 These calls are also in the *Testing* folder of the
-[Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbqvwh): choose **Run in
+[Postman docs](https://documenter.getpostman.com/view/32733686/2sBYHbrFjt): choose **Run in
 Postman** and pick the staging environment.
 
 ## Health checkups
