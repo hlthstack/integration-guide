@@ -148,9 +148,11 @@ def main() -> int:
         req.clear()
         req.update(json.loads(raw))
         apply_spec(req, spec)
-    # A fixed id, the one of the collection published in hlthstack's Postman workspace, so
-    # importing a new build there offers "Replace" and keeps the published docs' link.
-    c["info"]["_postman_id"] = "5fa8e16a-24e0-4e01-b5cc-5af35fb6d179"
+    # The id of the collection published in hlthstack's Postman workspace. CI updates that
+    # collection in place (scripts/update_postman.py), which keeps the published docs' link.
+    # Don't re-import it in Postman with "Replace": that creates a new collection and
+    # unpublishes the docs.
+    c["info"]["_postman_id"] = "9102ef40-ba12-49d6-8040-15c1b70f9fd3"
     c["auth"] = {"type": "bearer", "bearer": [{"key": "token", "value": "{{accessToken}}", "type": "string"}]}
     c["event"] = [{"listen": "prerequest", "script": {"type": "text/javascript", "exec": PRE_REQUEST.splitlines()}}]
     c["variable"] = [v for v in c.get("variable", []) if v.get("key") != "baseUrl"]
