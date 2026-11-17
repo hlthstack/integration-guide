@@ -38,7 +38,7 @@ A typical run: book, `confirm`, `assign_phlebo`, `completed`, `reports_received`
 `PATCH /api/consultations/{appointment_id}/update_status`
 
 ```json
-{ "status": "reschedule", "reschedule_time": "2026-01-16T04:30:00Z" }
+{ "status": "reschedule", "reschedule_time": "2030-01-16T04:30:00Z" }
 ```
 
 | `status` | Effect |

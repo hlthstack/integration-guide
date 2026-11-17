@@ -25,8 +25,18 @@ and receive status updates by webhook.
 | JavaScript | Server-side SDK for Node.js, plus a guide to calling the API with plain `fetch` | https://github.com/hlthstack/js |
 | Python | SDK (sync and async), plus a guide to calling the API with plain `requests` | https://github.com/hlthstack/python |
 | Java | SDK for Java 11+, plus a guide to calling the API with the JDK's `HttpClient` | https://github.com/hlthstack/java |
-| Web / PWA embed | Embed the hlthstack member experience in your app or site | https://github.com/hlthstack/web |
+| Web / PWA embed | Embed the hlthstack member experience in your app or site, with your own login (SSO) or the employer's identity provider (SAML 2.0) | https://github.com/hlthstack/web |
 | AI assistant skills | A skill and plugin that teach Claude Code, Codex and ChatGPT to use this API | This repo: [`skills/`](skills/), install guide in [docs/ai-skills.md](docs/ai-skills.md) |
+
+### Install an SDK
+
+```bash
+npm install github:hlthstack/js#v1.0.0                            # JavaScript / TypeScript
+pip install "git+https://github.com/hlthstack/python@v1.0.0"      # Python
+```
+
+Java: add the JitPack repository and depend on `com.github.hlthstack:java:v1.0.0`; see the
+[Java SDK README](https://github.com/hlthstack/java#readme) for Maven and Gradle.
 
 ## Environments
 
@@ -63,18 +73,18 @@ TOKEN=$(curl -s -u "$HS_USERNAME:$HS_PASSWORD" "$BASE/api/get-access-token" | jq
 curl -s "$BASE/api/providers?service_name=ahc&package_ids=1001&pincode=500081" \
   -H "Authorization: Bearer $TOKEN"
 
-# 3. Get slots for one provider on a date
-curl -s "$BASE/api/providers/1001/ahc/slots?package_ids=1001&pincode=500081&booking_date=2026-01-15" \
+# 3. Get slots for one provider for the next 14 days (add &booking_date=YYYY-MM-DD for one day)
+curl -s "$BASE/api/providers/1001/ahc/slots?package_ids=1001&pincode=500081" \
   -H "Authorization: Bearer $TOKEN"
 
-# 4. Book (use a slot's utc_slot_time as appointment_date_time)
+# 4. Book: set appointment_date_time to a utc_slot_time from step 3
 curl -s -X POST "$BASE/api/appointments" \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{
     "service_name": "ahc",
     "appointment_type": "inclinic",
     "provider_id": 1001,
-    "appointment_date_time": "2026-01-15T02:30:00Z",
+    "appointment_date_time": "2030-01-15T02:30:00Z",
     "customers": [{
       "name": "Jane Doe", "dob": "1990-08-24", "gender": "female",
       "mobile_number": "9999999999", "api_customer_id": "CUST1001",

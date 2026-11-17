@@ -22,7 +22,7 @@ Doctor appointments. Schemas are in [`openapi.yaml`](../openapi/openapi.yaml) (t
 
 ```json
 {
-  "appointment_date_time": "2026-01-15T04:30:00.000Z",
+  "appointment_date_time": "2030-01-15T04:30:00.000Z",
   "service_mode": "at_provider_location",
   "provider_id": 2001,
   "customers": [{
