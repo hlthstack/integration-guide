@@ -14,7 +14,7 @@ and receive status updates by webhook.
   then the [staging](https://developers.hlthstack.io/postman/hlthstack-staging.postman_environment.json)
   or [production](https://developers.hlthstack.io/postman/hlthstack-production.postman_environment.json)
   environment link.
-- **OpenAPI spec:** [`openapi/openapi.yaml`](openapi/openapi.yaml), version 1.0.0.
+- **OpenAPI spec:** [`openapi/openapi.yaml`](openapi/openapi.yaml), version 1.0.1.
 - **Changes:** [CHANGELOG.md](CHANGELOG.md).
 
 ## Ways to integrate
@@ -31,11 +31,11 @@ and receive status updates by webhook.
 ### Install an SDK
 
 ```bash
-npm install github:hlthstack/js#v1.0.0                            # JavaScript / TypeScript
-pip install "git+https://github.com/hlthstack/python@v1.0.0"      # Python
+npm install github:hlthstack/js#v1.0.1                            # JavaScript / TypeScript
+pip install "git+https://github.com/hlthstack/python@v1.0.1"      # Python
 ```
 
-Java: add the JitPack repository and depend on `com.github.hlthstack:java:v1.0.0`; see the
+Java: add the JitPack repository and depend on `com.github.hlthstack:java:v1.0.1`; see the
 [Java SDK README](https://github.com/hlthstack/java#readme) for Maven and Gradle.
 
 ## Environments

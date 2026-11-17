@@ -10,7 +10,26 @@ guides. The spec's `info.version` follows [semantic versioning](https://semver.o
   fields and enum values.
 - **Patch** (1.0.1): documentation fixes and clarifications; the API itself is unchanged.
 
-Each release is a git tag (`v1.0.0`). Watch this repository's releases to be notified.
+Each release is a git tag (`v1.0.1`). Watch this repository's releases to be notified.
+
+## 1.0.1 (2026-11-17)
+
+Documentation and corrections; no endpoint or field was added or removed.
+
+- Each API area's guide is now part of the reference at developers.hlthstack.io and of each
+  Postman folder, with Getting started, Environments, Webhooks, Errors and FAQ sections.
+- Health checkups: booking hours, day's notice, time zone handling, the 5-minute wait and
+  provider-specific rules, the plan service period on reschedule, and the co-pay link
+  deadline. The phlebotomist cut-off is a provider setting, and the different-provider block
+  applies at providers connected through a partner integration.
+- Consultations: `service_mode` is required (as the API already enforced); every customer in
+  a request is booked; the 90-minute notice for some doctors; co-pay and `payment_pending`;
+  reschedule and cancel rules and refunds; `meeting_link`, uploads, summary and voucher;
+  webhook sequences; `is_disrupted` and `disruption_reason` on providers.
+- Pre-registration: requests can end `failed`; retry only failed rows; adding a dependant to
+  an existing employee.
+- Errors: 400 for malformed ids vs 403 for ids that aren't yours. Webhooks: return 503, not
+  500, for temporary failures.
 
 ## 1.0.0 (2026-11-17)
 
