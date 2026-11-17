@@ -51,7 +51,8 @@ def gh_slug(heading: str) -> str:
 
 def site_slug(heading: str) -> str:
     """The anchor Redoc gives a top-level (##) heading inside a section."""
-    return re.sub(r"[^A-Za-z0-9.\- ]", "", heading.replace("`", "").strip()).replace(" ", "-")
+    # Redoc keeps most punctuation (".", ":", "(", ")") but drops commas and quotes.
+    return re.sub(r"[,`'\"?!]", "", heading.strip()).replace(" ", "-")
 
 
 def site_anchors(name: str) -> dict:
@@ -80,6 +81,8 @@ def site_link(guide: str, anchor: str):
         return None
     url = f"{SITE}#tag/{tag.replace(' ', '-')}"
     section = site_anchors(guide).get(anchor) if anchor else None
+    # Brackets would end the Markdown link early, so encode them.
+    section = section.replace("(", "%28").replace(")", "%29") if section else section
     return f"{url}/{section}" if section else url
 
 
