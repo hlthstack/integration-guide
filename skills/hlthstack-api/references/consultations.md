@@ -129,7 +129,7 @@ For `audio_call` there is no link: the doctor phones the `mobile_number` you sen
 | **Notice period** | Some doctors need at least 90 minutes' notice: booking closer to the slot returns `Specialist appointments must be booked at least 90 minutes in advance`. |
 | **Priority hours** | 8 AM-4 PM IST (`Priority consultation is only available between 8 AM and 4 PM`). A doctor calls within about 4 hours; the priority provider list is empty when no doctor of that speciality is rostered in the next 4 hours. |
 | **Reschedule and cancel window** | Both are allowed up to **30 minutes** before the slot. Cancellation is not allowed after a no-show or rejection. `rejected` and `noshow` consultations can be rescheduled at any time (the 30-minute rule does not apply), as long as the member's plan still covers the package. |
-| **2-hour rule** | Some partner doctors need 2 hours' notice, for reschedule and cancel (`Consultations with this partner can only be moved up to 2 hours before the slot.`). |
+| **2-hour rule** | Some partner doctors need 2 hours' notice, for reschedule (`Consultations with this partner can only be moved up to 2 hours before the slot.`) and cancel (`Consultations with this partner can only be cancelled up to 2 hours before the slot.`). |
 | **5-minute wait** | At clinics connected through a partner integration, cancel is also refused for 5 minutes after booking (`Please wait N minutes before you cancel this appointment.`). |
 | **Co-pay link expiry** | See the warning below. |
 
@@ -301,7 +301,7 @@ Errors:
 | Error | Response | What to do |
 |---|---|---|
 | Rule violations | `400 {"errors":{"cancel_error":["..."]}}` | See [section 6](#6-booking-rules-and-time-windows) |
-| Policy blocks | `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this partner can only be moved up to 2 hours before the slot.` or the 5-minute wait (`Please wait N minutes before you cancel this appointment.`) | Except for the wait, these are final for the booking |
+| Policy blocks | `422 {"errors":{"messages":["..."]}}`, for example `Consultations with this partner can only be cancelled up to 2 hours before the slot.` or the 5-minute wait (`Please wait N minutes before you cancel this appointment.`) | Except for the wait, these are final for the booking |
 
 ### 7.7 Summary and prescription
 

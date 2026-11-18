@@ -344,8 +344,9 @@ See [webhooks.md](webhooks.md) for payloads.
 
 ### Substitutions and splits
 
-- When a pharmacy substitutes an item, the next `status_update` webhook (and `getOrder`)
-  carries the updated `order_items`. Compare against your previous snapshot.
+- When a pharmacy substitutes an item, the next `status_update` webhook carries the updated
+  `order_items`, and `getOrder` the updated `order.products`. Compare them with your previous
+  snapshot.
 - Partner-collected only: a more expensive substitute triggers `additional_payment_required`;
   a cheaper one comes back through `post_billing.settlement.adjustment_amount`.
 - A pharmacy may split an order into shipments; `split_details.sub_orders` lists them, each
@@ -394,4 +395,4 @@ See [testing.md](testing.md) to simulate statuses on staging.
 | `422 {"success":false,"message":"Order cannot be cancelled"}` | Outside the cancel window: the pharmacy has shipped, or it is a split order | The order can't be cancelled |
 | `payment.refunded_amount` stays `0.0` | Partner-collected flow: hlthstack never holds the money | Settle using `post_billing.settlement.adjustment_amount` |
 | Stored prescription file URLs stop working | Pre-signed URLs expire after 5 minutes | Don't store them |
-| Order items differ from what was ordered | The pharmacy substituted an item | Compare `order_items` from `status_update` or `getOrder` with your previous snapshot |
+| Order items differ from what was ordered | The pharmacy substituted an item | Compare `order_items` from `status_update` (or `order.products` from `getOrder`) with your previous snapshot |
