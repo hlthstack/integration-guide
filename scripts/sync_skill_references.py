@@ -14,9 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGET = ROOT / "skills" / "hlthstack-api" / "references"
-# Guides about the API. ai-skills.md (installing this skill) and getting-started.md
-# (onboarding, links outside docs/) are not.
-SKIP = {"ai-skills.md", "getting-started.md"}
+# ai-skills.md is about installing this skill, not about hlthstack.
+SKIP = {"ai-skills.md"}
+REPO = "https://github.com/hlthstack/integration-guide/blob/main"
 
 
 def sources() -> dict[str, str]:
@@ -30,6 +30,10 @@ def sources() -> dict[str, str]:
         origin = path.relative_to(ROOT).as_posix()
         if name.endswith(".md"):
             text = re.sub(r"\]\(\.\./openapi/openapi\.yaml", "](openapi.yaml", text)
+            # Files outside docs/, and guides not bundled here, are linked on GitHub instead.
+            text = re.sub(r"\]\(\.\./", f"]({REPO}/", text)
+            for skipped in SKIP:
+                text = re.sub(rf"\]\({re.escape(skipped)}", f"]({REPO}/docs/{skipped}", text)
             header = f"<!-- Copied from {origin} by scripts/sync_skill_references.py. Edit the source. -->\n\n"
         else:
             header = f"# Copied from {origin} by scripts/sync_skill_references.py. Edit the source.\n"

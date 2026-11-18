@@ -1,11 +1,16 @@
 # AI coding assistant skills
 
 This repo ships an agent skill, [`skills/hlthstack-api`](../skills/hlthstack-api/SKILL.md),
-that teaches AI coding assistants how the hlthstack API works: the base URLs and auth, the
-booking, consultation, ePharmacy, wallet and pre-registration flows, webhook verification,
-and the field rules that commonly trip people up. With it installed, the assistant reads
-the OpenAPI spec instead of guessing endpoints, and asks before it creates, reschedules or
-cancels anything.
+that teaches AI assistants about hlthstack. It serves two kinds of reader:
+
+- **People exploring or evaluating hlthstack**, developers or not: what members can get,
+  embedding the member app vs building on the API, what a partner decides and receives, the
+  path to go-live, member communications and white-labelling. The assistant answers in plain
+  words from the [business-team page](for-business-teams.md) and the [glossary](glossary.md).
+- **Developers building the integration:** the base URLs and auth, the booking,
+  consultation, ePharmacy, wallet and pre-registration flows, webhook verification, and the
+  field rules that commonly trip people up. The assistant reads the OpenAPI spec instead of
+  guessing endpoints, and asks before it creates, reschedules or cancels anything.
 
 The skill follows the open [Agent Skills](https://agentskills.io/) format (a folder with a
 `SKILL.md`), so the same folder works in Claude Code, OpenAI Codex and ChatGPT. The folder is
@@ -310,7 +315,18 @@ explicitly, mention `@hlthstack` (plugin) or select the skill from **+** in the 
 
 ## Example prompts
 
-Prompts that work well with the skill:
+Prompts that work well with the skill.
+
+For someone new to hlthstack:
+
+- "What is hlthstack, and what could our members get through it?"
+- "Should we embed the hlthstack member app or build our own screens on the API? We have an
+  Android app and two backend developers."
+- "What do we need to decide and send hlthstack before we can go live?"
+- "What messages will our members receive after booking a consultation, and can they carry
+  our brand?"
+
+For developers:
 
 - "Generate a typed client for the hlthstack consultation endpoints we use."
 - "Our `createAppointment` call returns 422; here's the request and response. What's wrong?"

@@ -1,12 +1,15 @@
 {
   "name": "hlthstack",
-  "description": "hlthstack API skills for Claude Code",
-  "owner": { "name": "hlthstack", "url": "https://www.hlthstack.io/" },
+  "description": "hlthstack skills for Claude Code",
+  "owner": {
+    "name": "hlthstack",
+    "url": "https://www.hlthstack.io/"
+  },
   "plugins": [
     {
       "name": "hlthstack",
       "source": "./",
-      "description": "Teaches Claude the hlthstack health-benefits API: endpoints, auth, booking flows, webhooks and common pitfalls."
+      "description": "Teaches Claude about hlthstack and its health-benefits API: what members get, embed vs API, onboarding, member communications, and endpoints, auth, booking flows, webhooks and common pitfalls."
     }
   ]
 }

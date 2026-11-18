@@ -1,19 +1,47 @@
 ---
 name: hlthstack-api
-description: Integrate with or call the hlthstack health-benefits REST API (health checkup and lab test bookings, doctor consultations, ePharmacy orders, benefit wallets, member pre-registration, webhooks). Use when writing code against api.hlthstack.io, debugging hlthstack API calls or webhooks, or answering questions about hlthstack endpoints.
+description: Answer questions about hlthstack, the health-benefits platform for partners, and build integrations with it. Covers what members can get (health checkups and lab tests, doctor consultations, ePharmacy, benefit wallets), embedding the hlthstack member app vs building your own screens on the API, onboarding and go-live, member communications and white-labelling, and writing or debugging code against api.hlthstack.io (bookings, webhooks, pre-registration, errors). Use when someone is exploring, evaluating, planning or building an hlthstack integration, whether or not they are a developer.
 ---
 
-# hlthstack API
+# hlthstack
 
-hlthstack is a partner API for booking and managing members' health benefits. The source of
-truth is the OpenAPI 3.1 spec, bundled with this skill as `references/openapi.yaml`, and the
-guides are next to it in `references/` (`authentication.md`, `health-checkups.md`,
-`consultations.md`, `epharmacy.md`, `wallet.md`, `pre-registration.md`, `webhooks.md`,
-`errors.md`, `testing.md`, `environments.md`, `faq.md`). Both are also on GitHub at
-https://github.com/hlthstack/integration-guide. Before writing a call or answering, read the
-operation in the spec (search it by `operationId` rather than reading it whole) and the guide
-for its area. Don't invent endpoints, fields or enum values; if neither documents something,
-say so.
+hlthstack lets partners (HR platforms, insurers, employers' apps) offer health benefits to
+their members: they either embed hlthstack's ready-made member app, or build their own
+screens on the hlthstack API, or both. The source of truth is the OpenAPI 3.1 spec, bundled
+with this skill as `references/openapi.yaml`, and the guides next to it in `references/`.
+Both are also on GitHub at https://github.com/hlthstack/integration-guide, the API reference
+is at https://developers.hlthstack.io, and access requests go through
+https://www.hlthstack.io/. Read the page that answers the question (below) before answering;
+for API calls, read the operation in the spec (search it by `operationId` rather than
+reading it whole) and the guide for its area. Don't invent endpoints, fields, enum values,
+prices, timelines or commitments; if the references don't say something, say so and suggest
+asking hlthstack.
+
+## Which page answers what
+
+| The question is about | Read |
+|---|---|
+| What hlthstack is, what members get, embed vs API, what a partner decides and receives, the path to go-live, support, security (non-technical) | `references/for-business-teams.md` |
+| A term (entity, slug, plan, package, PWA, webhook, phlebotomist...) | `references/glossary.md` |
+| How to start, credentials, first calls, go-live checklist (technical) | `references/getting-started.md` |
+| Messages hlthstack sends members (email, WhatsApp, SMS, in-app, push) | `references/product-communications.md` |
+| Sending those messages under the partner's brand | `references/white-labelling.md` |
+| A specific error and how to fix it | `references/common-errors.md`, then `references/errors.md` |
+| Booking flows, rules, statuses for one service | `references/health-checkups.md`, `consultations.md`, `epharmacy.md`, `wallet.md`, `pre-registration.md` |
+| Tokens, environments, webhooks, staging test endpoints, quick answers | `references/authentication.md`, `environments.md`, `webhooks.md`, `testing.md`, `faq.md` |
+| Endpoints, fields, enums | `references/openapi.yaml` |
+| Embedding the member app (sign-in payload, encryption, WebView) or employer SAML sign-in | https://github.com/hlthstack/web (not bundled; say so and link it) |
+
+## Answering people new to hlthstack
+
+- If the person isn't a developer, or is exploring or evaluating, answer in plain words from
+  `for-business-teams.md` and `glossary.md`, without code, and explain any term you use. Offer
+  the developer path (`getting-started.md`, the SDKs) as a next step rather than leading with it.
+- When they ask which way to integrate, lay out the options from the "Three ways to
+  integrate" table in `for-business-teams.md` and ask what they already have (their own app?
+  developers available? need their own branding?) rather than picking for them.
+- For pricing, contracts, timelines or anything not in the references, say it is agreed with
+  hlthstack and point to https://www.hlthstack.io/.
 
 ## Essentials
 
@@ -30,6 +58,8 @@ say so.
 - Credentials, the entity secret key and the webhook secret are server-side secrets. Read
   them from environment variables; never hard-code them, print them, or put them in client
   code.
+- Send the `plan_id` issued with the partner's package ids; without it the base plan is
+  used, and a service not on it returns `403 this service is not enabled for you`.
 - Prefer the official SDKs when the user's stack matches: https://github.com/hlthstack/js,
   https://github.com/hlthstack/python, https://github.com/hlthstack/java. The web/PWA embed
   is https://github.com/hlthstack/web.
@@ -49,7 +79,7 @@ say so.
 - Wallet: `getCustomerWallet`, `listCustomerPlans` (path includes the partner's company slug).
 - Pre-registration (async): `getPreRegistrationAccessToken` -> `createPreRegistrations` /
   `updatePreRegistrations` / `deactivatePreRegistrations` (each returns `request_id`) ->
-  poll `getPreRegistrationStatus` until `status` is `completed`. On create, every required
+  poll `getPreRegistrationStatus` until `status` is `completed` or `failed`. On create, every required
   key must be present in every row (empty values allowed) or the row is silently dropped;
   at most 250 rows per request. See `references/pre-registration.md`.
 - Staging-only simulators (tag Testing): `simulateAppointmentStatus`,

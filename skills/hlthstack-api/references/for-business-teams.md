@@ -162,13 +162,13 @@ servers.
 |---|---|
 | Questions and access | Your hlthstack contact, or [hlthstack.io](https://www.hlthstack.io/) |
 | Problems with these docs or the SDKs | An issue in the repository concerned |
-| Security issues | Privately, as described in [SECURITY.md](../SECURITY.md); not in a public issue |
-| API changes | [CHANGELOG.md](../CHANGELOG.md) |
+| Security issues | Privately, as described in [SECURITY.md](https://github.com/hlthstack/integration-guide/blob/main/SECURITY.md); not in a public issue |
+| API changes | [CHANGELOG.md](https://github.com/hlthstack/integration-guide/blob/main/CHANGELOG.md) |
 
 ## Security
 
 - **Reporting.** Report security issues privately through [hlthstack.io](https://www.hlthstack.io/)
-  or your hlthstack contact, as described in [SECURITY.md](../SECURITY.md).
+  or your hlthstack contact, as described in [SECURITY.md](https://github.com/hlthstack/integration-guide/blob/main/SECURITY.md).
 - **Credentials stay on your servers.** API passwords, pre-registration passwords, API secret
   keys and webhook signing secrets are issued per environment and must never be shipped in a
   mobile app or browser code. If one leaks, ask hlthstack to rotate it.
