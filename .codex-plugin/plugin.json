@@ -1,6 +1,6 @@
 {
   "name": "hlthstack",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "Teaches Codex and ChatGPT about hlthstack and its health-benefits API: what members get, embed vs API, onboarding, member communications, and endpoints, auth, booking flows, webhooks and common pitfalls.",
   "author": {
     "name": "hlthstack",

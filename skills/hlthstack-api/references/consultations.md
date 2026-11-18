@@ -316,7 +316,7 @@ Get the doctor's summary and prescription after the call.
 - In-clinic consultations have no API summary.
 
 > [!WARNING]
-> File links expire after a few minutes: download them, don't store them.
+> File links expire 5 minutes after they're issued: download them, don't store them.
 
 ### 7.8 Voucher
 
@@ -395,7 +395,7 @@ Payload fields are described in [webhooks.md](webhooks.md#appointment-and-consul
 | No webhook for a booking | Unpaid co-pay: an unpaid booking is never confirmed, sends no webhook and is dropped after the slot passes | Make sure the member pays via `payment_link` |
 | `meeting_link` is `null` | The doctor has not confirmed yet, or the call is `audio_call` (no link; the doctor phones the `mobile_number`) | Wait for `confirmed` |
 | Summary and prescription returns 404 `Consultation not found` | No consultation record yet | Try again after `completed` |
-| Summary file link stops working | File links expire after a few minutes | Download the files; don't store the links |
+| Summary file link stops working | File links expire 5 minutes after they're issued | Download the files; don't store the links |
 | Upload returns `Invalid file format` | The form is wrong, not the file type | Send `files[][name]` + `files[][value]` pairs as multipart |
 | Reschedule or cancel returns 400 `reschedule_error` / `cancel_error` | A booking rule was broken (for example the 30-minute window) | See [section 6](#6-booking-rules-and-time-windows) |
 | Reschedule or cancel returns 422 | A policy block (2-hour partner rule, inactive company plan, 5-minute wait) | Read `errors.messages`; except for the wait, it is final for the booking |
