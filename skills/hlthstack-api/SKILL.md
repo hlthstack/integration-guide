@@ -30,7 +30,8 @@ asking hlthstack.
 | Booking flows, rules, statuses for one service | `references/health-checkups.md`, `consultations.md`, `epharmacy.md`, `wallet.md`, `pre-registration.md` |
 | Tokens, environments, webhooks, staging test endpoints, quick answers | `references/authentication.md`, `environments.md`, `webhooks.md`, `testing.md`, `faq.md` |
 | Endpoints, fields, enums | `references/openapi.yaml` |
-| Embedding the member app (sign-in payload, encryption, WebView) or employer SAML sign-in | https://github.com/hlthstack/web (not bundled; say so and link it) |
+| Embedding the member app (PWA): credentials, sign-in payload, encryption, launch URL, deeplinks, WebView settings, launch errors | `references/pwa.md` |
+| Employer sign-in with the company's own identity provider (SAML) | `references/saml.md` |
 
 ## Answering people new to hlthstack
 
@@ -61,8 +62,9 @@ asking hlthstack.
 - Send the `plan_id` issued with the partner's package ids; without it the base plan is
   used, and a service not on it returns `403 this service is not enabled for you`.
 - Prefer the official SDKs when the user's stack matches: https://github.com/hlthstack/js,
-  https://github.com/hlthstack/python, https://github.com/hlthstack/java. The web/PWA embed
-  is https://github.com/hlthstack/web.
+  https://github.com/hlthstack/python, https://github.com/hlthstack/java. For the member-app
+  (PWA) embed, follow `references/pwa.md` and its encryption examples in
+  https://github.com/hlthstack/web/tree/main/examples.
 
 ## Main flows (operationIds from the spec)
 

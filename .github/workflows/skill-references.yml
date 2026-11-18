@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  # The PWA and SAML guides come from hlthstack/web; catch changes there too.
+  schedule:
+    - cron: "30 3 * * *"
+  workflow_dispatch:
 
 jobs:
   check:
@@ -13,5 +17,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      # The skill folder carries copies of openapi/ and docs/; fail if they drift.
+      # The skill folder carries copies of openapi/, docs/ and the hlthstack/web guides; fail if they drift.
       - run: python scripts/sync_skill_references.py --check

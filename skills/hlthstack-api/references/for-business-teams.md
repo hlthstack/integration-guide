@@ -63,7 +63,7 @@ Many partners use both the member app and the API.
 | **Which services** | Every service enabled on your plan, through one integration. New features reach members without changes on your side. | The services you integrate one at a time: health checkups and lab tests, consultations, ePharmacy, wallet, member registration. | The services you integrate with the API, plus those enabled in the member app. |
 | **Member sign-in** | Through your own login (members never see an hlthstack login screen), or with the employer's own sign-in (SAML). | Members use your app's sign-in; your systems identify each member to hlthstack with your own member id. | Both, as in the columns to the left. |
 
-**See also:** [PWA or REST API?](https://github.com/hlthstack/web#1-overview) in the member-app
+**See also:** [PWA or REST API?](pwa.md#1-overview) in the member-app
 guide.
 
 ## What you decide and provide
@@ -153,7 +153,7 @@ servers.
 |---|---|---|
 | **Messages** | hlthstack sends members emails, WhatsApp, SMS, in-app and push messages about pharmacy orders, vision orders and consultations, automatically. Your app should not send its own copies. | [Product communications](product-communications.md) |
 | **Branding** | Those messages can go out under your app name, sender name and logo. The member app's own theming is agreed with hlthstack. | [White-labelling](white-labelling.md) |
-| **Sign-in** | With your own login, members open the member app from your app and never see a login screen. With SAML, employees sign in with their work account and never see an hlthstack password. | [Member-app SSO](https://github.com/hlthstack/web#3-how-sso-works), [SAML](https://github.com/hlthstack/web/blob/main/docs/saml.md) |
+| **Sign-in** | With your own login, members open the member app from your app and never see a login screen. With SAML, employees sign in with their work account and never see an hlthstack password. | [Member-app SSO](pwa.md#3-how-sso-works), [SAML](saml.md) |
 | **Payments** | When a benefit doesn't cover the full cost, the member may get a payment link for the rest (a co-pay). | [Glossary](glossary.md) |
 
 ## Support and contact
@@ -181,6 +181,6 @@ servers.
 
 - [Getting started](getting-started.md): the developer path from access to go-live, including
   the member-app embed track.
-- [The member-app (PWA) guide](https://github.com/hlthstack/web#readme), if you embed the
+- [The member-app (PWA) guide](pwa.md), if you embed the
   member app.
 - The [glossary](glossary.md), so both teams use the same words.

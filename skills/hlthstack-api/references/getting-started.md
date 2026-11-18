@@ -113,7 +113,7 @@ webhooks. Work through the checklist in [testing.md](testing.md).
 
 If you embed the ready-made hlthstack member app (the PWA) in your app or website, you build
 no booking screens. Your backend signs members in, and your app opens the PWA. The full guide
-is the [PWA integration guide](https://github.com/hlthstack/web#readme).
+is the [PWA integration guide](pwa.md).
 
 1. **Get your values.** Ask hlthstack for your `slug`, `entity_id`, `encoded_key` and
    `encoded_iv`. They are issued per environment; staging and production values differ.
@@ -122,15 +122,15 @@ is the [PWA integration guide](https://github.com/hlthstack/web#readme).
 2. **Encrypt the payload on your server.** Build a small JSON payload that identifies the
    member and encrypt it with AES-256-GCM using your key and IV. Never put the key or IV in
    a mobile app or web page. Encrypt just before launching: the sign-in must complete within
-   30 seconds. See [Payload](https://github.com/hlthstack/web#payload) and
-   [Encrypting the payload](https://github.com/hlthstack/web#encrypting-the-payload).
+   30 seconds. See [Payload](pwa.md#payload) and
+   [Encrypting the payload](pwa.md#encrypting-the-payload).
 3. **Launch the PWA.** Post `message` and `auth_tag` from your website, Android WebView or
    iOS WKWebView to `https://staging-pwa.hlthstack.io/pwa-sso/<slug>`, and apply the
-   [embedding tips](https://github.com/hlthstack/web#embedding-tips) (JavaScript, storage,
+   [embedding tips](pwa.md#embedding-tips) (JavaScript, storage,
    cookies, camera, file upload) so every feature works. See
-   [Launching the PWA](https://github.com/hlthstack/web#launching-the-pwa).
+   [Launching the PWA](pwa.md#launching-the-pwa).
 4. **Test on staging.** Try each case in
-   [Errors and troubleshooting](https://github.com/hlthstack/web#9-errors-and-troubleshooting)
+   [Errors and troubleshooting](pwa.md#9-errors-and-troubleshooting)
    on staging, where users and sessions never touch production data.
 5. **Switch to production values.** Change the `slug`, `entity_id`, key and IV together, and
    launch on `https://pwa.hlthstack.io/pwa-sso/<slug>`.
@@ -138,7 +138,7 @@ is the [PWA integration guide](https://github.com/hlthstack/web#readme).
 > [!NOTE]
 > If employees should sign in with their employer's own identity provider (Okta, Entra ID and
 > so on) instead of through your app, see
-> [SAML 2.0 single sign-on](https://github.com/hlthstack/web/blob/main/docs/saml.md).
+> [SAML 2.0 single sign-on](saml.md).
 > Many partners use both the PWA and the REST API; for API calls, follow steps 1 to 6 above.
 
 ## Support

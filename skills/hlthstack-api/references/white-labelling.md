@@ -39,5 +39,5 @@ identity instead of hlthstack's.
 3. hlthstack enables it for those companies and confirms when it is live.
 
 **See also:** [product communications](product-communications.md) for what members receive
-and when; the [member app embed guide](https://github.com/hlthstack/web#readme) to theme the
+and when; the [member app embed guide](pwa.md) to theme the
 embedded member app itself.

@@ -14,7 +14,8 @@ that teaches AI assistants about hlthstack. It serves two kinds of reader:
 
 The skill follows the open [Agent Skills](https://agentskills.io/) format (a folder with a
 `SKILL.md`), so the same folder works in Claude Code, OpenAI Codex and ChatGPT. The folder is
-self-contained: `references/` holds copies of the OpenAPI spec and the API guides, so the
+self-contained: `references/` holds copies of the OpenAPI spec, the API guides and the
+[member-app (PWA) and SAML guides](https://github.com/hlthstack/web#readme), so the
 assistant reads them locally however the skill was installed, without fetching anything. The
 repo is also a plugin marketplace for both Claude (`.claude-plugin/`) and OpenAI
 (`.agents/plugins/marketplace.json` and `.codex-plugin/`), which keeps the skill up to date
@@ -338,10 +339,12 @@ For developers:
 
 ## Maintaining the skill
 
-`skills/hlthstack-api/references/` is generated from `openapi/` and `docs/`.
+`skills/hlthstack-api/references/` is generated from `openapi/`, `docs/` and the
+[hlthstack/web](https://github.com/hlthstack/web) guides (`README.md` as `pwa.md`,
+`docs/saml.md` as `saml.md`, fetched from its `main` branch).
 
-1. After changing either, regenerate it and commit the result; CI fails if the copies are out
-   of date:
+1. After changing any of them, regenerate it and commit the result; CI fails if the copies are
+   out of date, and also checks once a day, so a change in hlthstack/web is caught:
 
    ```bash
    python3 scripts/sync_skill_references.py
